@@ -1,3 +1,4 @@
+"use client";
 interface LegendItem {
   name: string;
   cost: number;

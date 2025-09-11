@@ -1,5 +1,6 @@
 "use client";
 
+import ErrorToast from "@/components/ui/ErrorToast";
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface ErrorContextType {

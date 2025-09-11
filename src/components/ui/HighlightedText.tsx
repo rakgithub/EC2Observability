@@ -1,3 +1,5 @@
+"use client";
+
 const getValueClass = (value: number): string => {
   if (value > 0) return "text-red-400 font-medium";
   if (value < 0) return "text-green-400 font-medium";

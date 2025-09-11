@@ -1,3 +1,5 @@
+"use client";
+
 export const ProgressBar = ({ value }: { value: number }) => (
   <div className="w-full bg-gray-700 rounded-full h-2.5 overflow-hidden">
     <div

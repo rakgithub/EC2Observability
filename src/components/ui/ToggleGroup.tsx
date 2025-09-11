@@ -1,3 +1,4 @@
+"use client";
 interface ToggleOption<T> {
   value: T;
   label: string;

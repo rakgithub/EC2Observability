@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "@/assets/styles/globals.css";
-import { ErrorProvider } from "@/context/ErrorProvider";
+import { AppProviders } from "@/context/AppProvider";
 
 export const metadata: Metadata = {
   title: "AWS Cost Monitor",
@@ -15,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body>
-        <ErrorProvider>{children}</ErrorProvider>
+       <AppProviders>
+          {children}
+        </AppProviders>
       </body>
     </html>
   );
