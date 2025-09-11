@@ -46,7 +46,7 @@ This project is a prototype built for the Tracer take-home assessment. It's desi
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/rakgithub/ec2-observability
-    cd ec2-observability-prototype
+    cd ec2-observability
     ```
 2.  **Install dependencies:**
     ```bash
