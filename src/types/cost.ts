@@ -1,4 +1,7 @@
 export type TimeRange = "7d" | "24h" | "30d" | "lastMonth";
+export type Dimension = "region" | "type" | "job";
+export type ViewMode = "chart" | "table";
+export type ChartType = "bar" | "pie";
 
 export interface CostData {
   name: string;

@@ -1,3 +1,6 @@
+import { LABELS } from "@/constants/cloudCost";
+import { CostsResponse } from "@/types/cost";
+
 export const detectSpike = (
   previousValue: number,
   currentValue: number
@@ -112,3 +115,56 @@ export function analyzeTrend(values: number[]): TrendSignal {
   if (avg > 70) return "high";
   return slope > 0 ? "rising" : "stable";
 }
+
+export const buildMetrics = (data: CostsResponse) => {
+  const {
+    totalSpend = 0,
+    dailyBurn = 0,
+    projectedMonthly = 0,
+    previousTotalSpend = 0,
+    previousDailyBurn = 0,
+    previousProjectedMonthly = 0,
+    totalSpendTrend = "neutral",
+    dailyBurnTrend = "neutral",
+    projectedMonthlyTrend = "neutral",
+  } = data ?? {};
+
+  return [
+    {
+      key: "totalSpend",
+      title: LABELS.TOTAL_SPEND,
+      value: `$${totalSpend.toFixed(2)}`,
+      trend: totalSpendTrend,
+      history: data?.totalSpendHistory ?? [],
+      tooltip: LABELS.TOTAL_SPEND_TOOLTIP,
+      isAnomaly: detectSpike(previousTotalSpend, totalSpend),
+      recommendation: getSpendRecommendation(previousTotalSpend, totalSpend),
+      color: "#10b981",
+    },
+    {
+      key: "dailyBurn",
+      title: LABELS.DAILY_BURN,
+      value: `$${dailyBurn.toFixed(2)}/day`,
+      trend: dailyBurnTrend,
+      history: data?.dailyBurnHistory ?? [],
+      tooltip: LABELS.DAILY_BURN_TOOLTIP,
+      isAnomaly: detectSpike(previousDailyBurn, dailyBurn),
+      recommendation: getDailyBurnRecommendation(previousDailyBurn, dailyBurn),
+      color: "#3b82f6",
+    },
+    {
+      key: "projectedMonthly",
+      title: LABELS.PROJECTED_MONTHLY,
+      value: `$${projectedMonthly.toFixed(2)}`,
+      trend: projectedMonthlyTrend,
+      history: data?.projectedMonthlyHistory ?? [],
+      tooltip: LABELS.PROJECTED_MONTHLY_TOOLTIP,
+      isAnomaly: detectSpike(previousProjectedMonthly, projectedMonthly),
+      recommendation: getProjectedMonthlyRecommendation(
+        previousProjectedMonthly,
+        projectedMonthly
+      ),
+      color: "#f59e0b",
+    },
+  ];
+};

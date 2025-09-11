@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { MoreVertical } from "lucide-react";
+import { getActionLabel } from "./utils";
 
 interface RecommendedActionProps {
   cpu: number;
@@ -10,13 +11,6 @@ interface RecommendedActionProps {
   instanceId: string;
   className?: string;
 }
-
-const getActionLabel = (cpu: number, gpu: number, uptime: number) => {
-  if (cpu < 15 && uptime > 24) return "Consider stopping";
-  if (gpu > 80) return "Upgrade GPU";
-  if (cpu > 80) return "Upgrade instance";
-  return "OK";
-};
 
 const RecommendedAction: React.FC<RecommendedActionProps> = ({
   cpu,
@@ -36,7 +30,6 @@ const RecommendedAction: React.FC<RecommendedActionProps> = ({
     // TODO: connect to API
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -67,7 +60,6 @@ const RecommendedAction: React.FC<RecommendedActionProps> = ({
         {label}
       </span>
 
-      {/* Only show dropdown trigger if an action is needed */}
       {label !== "OK" && (
         <>
           <button

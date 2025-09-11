@@ -1,3 +1,4 @@
+import HighlightedText from "@/components/ui/HighlightedText";
 import Sparkline from "@/components/ui/Sparkline";
 import Tooltip from "@/components/ui/Tooltip";
 import {
@@ -9,38 +10,18 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+type Trend = "up" | "down" | "neutral";
+
 interface KPICardProps {
   title: string;
   value: string;
-  trend: "up" | "down" | "neutral";
+  trend: Trend;
   isAnomaly?: boolean;
   tooltipContent?: string;
   recommendation?: { message: string };
   history?: { Timestamp: string; Average: number }[];
   color?: string;
 }
-
-const getValueClass = (value: number): string => {
-  if (value > 0) return "text-red-400 font-medium";
-  if (value < 0) return "text-green-400 font-medium";
-  return "text-gray-400 font-medium";
-};
-
-const HighlightedText: React.FC<{ message: string }> = ({ message }) => {
-  return (
-    <span className="text-sm text-gray-300 leading-relaxed">
-      {message.split(/(-?\d+\.?\d*%)/g).map((part, i) =>
-        part.endsWith("%") ? (
-          <span key={i} className={getValueClass(parseFloat(part))}>
-            {part}
-          </span>
-        ) : (
-          <span key={i}>{part}</span>
-        )
-      )}
-    </span>
-  );
-};
 
 const trendConfig = {
   up: { Icon: TrendingUp, color: "text-green-400" },
@@ -69,8 +50,7 @@ const KPICard: React.FC<KPICardProps> = ({
         {tooltipContent && (
           <Tooltip
             content={tooltipContent}
-            place="top" // Position above to avoid overlap
-            className="z-50 bg-gray-900 text-gray-100 border border-gray-700 rounded-md p-2 text-sm shadow-lg"
+            // className="z-50 bg-gray-900 text-gray-100 border border-gray-700 rounded-md p-2 text-sm shadow-lg"
           >
             <Info
               className="w-4 h-4 text-teal-400 cursor-pointer transition-colors duration-200 hover:text-teal-300"
@@ -91,13 +71,19 @@ const KPICard: React.FC<KPICardProps> = ({
         </div>
       )}
       {recommendation && (
-        <div className="mt-4 flex items-start gap-2 bg-teal-900/50 rounded-lg p-3">
+        <div
+          className="mt-4 flex items-start gap-2 bg-teal-900/50 rounded-lg p-3"
+          aria-label="Cost optimization recommendation"
+        >
           <Lightbulb className="w-4 h-4 text-teal-400 flex-shrink-0 mt-0.5" />
           <HighlightedText message={recommendation.message} />
         </div>
       )}
       {isAnomaly && (
-        <div className="mt-4 flex items-start gap-2 bg-red-900/50 rounded-lg p-3">
+        <div
+          className="mt-4 flex items-start gap-2 bg-red-900/50 rounded-lg p-3"
+          aria-label="Spending anomaly detected"
+        >
           <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-400 leading-relaxed">
             Anomaly detected: Spending has increased significantly.

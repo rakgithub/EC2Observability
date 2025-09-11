@@ -8,4 +8,16 @@ export interface EC2Instance {
   costPerHour?: number;
   launchTime?: string;
   gpu?: number;
+  computedUptimeHours?: number;
+}
+
+export interface MetricDatapoint {
+  Timestamp: string;
+  Average: number;
+  Unit: string;
+}
+
+export interface ChartDataItem {
+  name: string;
+  cost: number;
 }

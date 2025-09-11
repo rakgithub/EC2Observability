@@ -150,30 +150,44 @@ export async function getCosts(timeRange: TimeRange) {
     // ]);
     const [regionRes, typeRes, jobRes] = await Promise.all([
       fetchCosts({
-        start: start, // Use the dynamic 'start' date
+        start: start,
         end: now,
-        granularity: granularity, // Use the dynamic 'granularity'
+        granularity: granularity,
         groupBy: [{ Type: "DIMENSION", Key: "REGION" }],
       }),
       fetchCosts({
-        start: start, // Use the dynamic 'start' date
+        start: start,
         end: now,
-        granularity: granularity, // Use the dynamic 'granularity'
+        granularity: granularity,
         groupBy: [{ Type: "DIMENSION", Key: "INSTANCE_TYPE" }],
       }),
       fetchCosts({
-        start: start, // Use the dynamic 'start' date
+        start: start,
         end: now,
-        granularity: granularity, // Use the dynamic 'granularity'
+        granularity: granularity,
         groupBy: [{ Type: "TAG", Key: "job" }],
       }),
     ]);
 
-    const byRegion =
+    const byRegionData =
       regionRes[0]?.Groups?.map((g) => ({
         name: g.Keys?.[0] ?? "Unknown",
         cost: parseCost(g.Metrics?.UnblendedCost?.Amount),
       })) ?? [];
+
+    const regionAttributedCost = byRegionData.reduce(
+      (sum, item) => sum + item.cost,
+      0
+    );
+    const regionUnattributedCost = totalSpend - regionAttributedCost;
+
+    const byRegion =
+      regionUnattributedCost > 0.01
+        ? [
+            ...byRegionData,
+            { name: "Other Services", cost: regionUnattributedCost },
+          ]
+        : byRegionData;
 
     const byType =
       typeRes[0]?.Groups?.map((g) => ({

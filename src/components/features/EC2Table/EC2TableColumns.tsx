@@ -1,6 +1,7 @@
 "use client";
 
 import Tooltip from "@/components/ui/Tooltip";
+import { LABELS } from "@/constants/ec2Table";
 import { EC2Instance } from "@/types/ec2";
 import { ColumnDef, FilterFn, Row } from "@tanstack/react-table";
 import { Info } from "lucide-react";
@@ -24,27 +25,30 @@ const stringFilter: FilterFn<EC2Instance> = (
   columnId: string,
   filterValue: string
 ) => {
-  debugger;
   if (!filterValue) return true;
   const value = row.getValue<string>(columnId);
   return value.toLowerCase() === filterValue.toLowerCase();
 };
 
 export const EC2TableColumns: ColumnDef<EC2Instance>[] = [
-  { header: "Instance ID", accessorKey: "id", enableSorting: true },
   {
-    header: "Region",
+    header: LABELS.INSTANCE_ID,
+    accessorKey: "id",
+    enableSorting: true,
+  },
+  {
+    header: LABELS.REGION,
     accessorKey: "region",
     enableSorting: true,
     filterFn: stringFilter,
   },
-  { header: "Type", accessorKey: "type", enableSorting: true },
+  { header: LABELS.TYPE, accessorKey: "type", enableSorting: true },
   {
     header: () => (
       <div className="flex items-center justify-between w-full gap-2">
         <div className="flex items-center gap-1">
-          <span className="text-gray-100">CPU Usage (%)</span>
-          <Tooltip content="The percentage of CPU utilized by this instance.">
+          <span className="text-gray-100">{LABELS.CPU_USAGE}</span>
+          <Tooltip content={LABELS.CPU_USAGE_TOOLTIP}>
             <Info className="w-3.5 h-3.5 text-teal-400 cursor-help flex-shrink-0" />
           </Tooltip>
         </div>
@@ -59,8 +63,8 @@ export const EC2TableColumns: ColumnDef<EC2Instance>[] = [
     header: () => (
       <div className="flex items-center justify-between w-full gap-2">
         <div className="flex items-center gap-1">
-          <span className="text-gray-100">RAM Usage (%)</span>
-          <Tooltip content="The percentage of RAM utilized by this instance.">
+          <span className="text-gray-100">{LABELS.RAM_USAGE}</span>
+          <Tooltip content={LABELS.RAM_USAGE_TOOLTIP}>
             <Info className="w-3.5 h-3.5 text-teal-400 cursor-help flex-shrink-0" />
           </Tooltip>
         </div>
@@ -75,8 +79,8 @@ export const EC2TableColumns: ColumnDef<EC2Instance>[] = [
     header: () => (
       <div className="flex items-center justify-between w-full gap-2">
         <div className="flex items-center gap-1">
-          <span className="text-gray-100">GPU Usage (%)</span>
-          <Tooltip content="The percentage of GPU utilized by this instance.">
+          <span className="text-gray-100">{LABELS.GPU_USAGE}</span>
+          <Tooltip content={LABELS.GPU_USAGE_TOOLTIP}>
             <Info className="w-3.5 h-3.5 text-teal-400 cursor-help flex-shrink-0" />
           </Tooltip>
         </div>
@@ -92,11 +96,10 @@ export const EC2TableColumns: ColumnDef<EC2Instance>[] = [
     header: () => (
       <div className="flex items-center justify-between w-full gap-2">
         <div className="flex items-center gap-1">
-          <span className="text-gray-100">Uptime (h)</span>
+          <span className="text-gray-100">{LABELS.UPTIME}</span>
         </div>
       </div>
     ),
-    // accessorKey: "computedUptimeHours",
     accessorKey: "computedUptimeHours",
     id: "computedUptimeHours",
     enableSorting: true,
@@ -105,7 +108,7 @@ export const EC2TableColumns: ColumnDef<EC2Instance>[] = [
   {
     header: () => (
       <div className="flex items-center justify-between w-full">
-        <span className="text-gray-100">Cost/hr</span>
+        <span className="text-gray-100">{LABELS.COST_PER_HOUR}</span>
       </div>
     ),
     accessorKey: "costPerHour",
@@ -114,7 +117,7 @@ export const EC2TableColumns: ColumnDef<EC2Instance>[] = [
   {
     header: () => (
       <div className="flex items-center justify-between w-full">
-        <span className="text-gray-100">Status</span>
+        <span className="text-gray-100">{LABELS.STATUS}</span>
       </div>
     ),
     accessorKey: "status",
@@ -123,7 +126,7 @@ export const EC2TableColumns: ColumnDef<EC2Instance>[] = [
   {
     header: () => (
       <div className="flex items-center justify-between w-full">
-        <span className="text-gray-100">Action</span>
+        <span className="text-gray-100">{LABELS.ACTION}</span>
       </div>
     ),
     accessorKey: "action",

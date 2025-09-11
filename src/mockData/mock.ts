@@ -153,6 +153,9 @@ export const mockCostData = () => {
     return change > 5 ? "up" : change < -5 ? "down" : "neutral";
   };
 
+  const unattributedPercentage = 0.2; // 20% of total spend is "unattributed"
+  const unattributedCost = totalSpend * unattributedPercentage;
+  const attributedSpend = totalSpend - unattributedCost;
   // Distribute total spend across regions with anomaly adjustments
   const regions = [
     { name: "us-east-1", weight: 0.4 }, // Higher usage
@@ -162,12 +165,12 @@ export const mockCostData = () => {
     { name: "ap-northeast-1", weight: 0.05 },
   ];
   const byRegion = regions.map((region, i) => {
-    let cost = totalSpend * region.weight;
+    let cost = attributedSpend * region.weight;
     // Apply anomaly impact (e.g., us-east-1 spike on day 4)
     if (region.name === "us-east-1" && mockHistory[3].anomaly) {
-      cost += mockHistory[3].Average * 0.5; // 50% of spike attributed to us-east-1
+      cost += mockHistory[3].Average * 0.5;
     } else if (region.name === "ap-south-1" && mockHistory[5].anomaly) {
-      cost -= mockHistory[5].Average * 0.2; // 20% of drop attributed to ap-south-1
+      cost -= mockHistory[5].Average * 0.2;
     }
     return { name: region.name, cost: Math.round(cost * 100) / 100 };
   });
@@ -181,10 +184,11 @@ export const mockCostData = () => {
       instancePricing[type as keyof typeof instancePricing] *
       24 *
       7 *
-      utilization.busy;
+      utilization.busy *
+      (attributedSpend / (totalSpend > 0 ? totalSpend : 1)); // Scale cost to attributedSpend
     // Apply anomaly impact (e.g., c5.xlarge drop on day 6)
     if (type === "c5.xlarge" && mockHistory[5].anomaly) {
-      cost -= mockHistory[5].Average * 0.3; // 30% of drop attributed to c5.xlarge
+      cost -= mockHistory[5].Average * 0.3;
     }
     return {
       name: type,
@@ -202,10 +206,10 @@ export const mockCostData = () => {
     { name: "Dev Environment", weight: 0.05 },
   ];
   const byJob = jobs.map((job) => {
-    let cost = totalSpend * job.weight;
+    let cost = attributedSpend * job.weight; // Scale cost to attributedSpend
     // Apply anomaly impact (e.g., ML Training spike on day 4)
     if (job.name === "ML Training" && mockHistory[3].anomaly) {
-      cost += mockHistory[3].Average * 0.4; // 40% of spike attributed to ML Training
+      cost += mockHistory[3].Average * 0.4;
     }
     return { name: job.name, cost: Math.round(cost * 100) / 100 };
   });
