@@ -1,114 +1,79 @@
-EC2 Observability Prototype
+I will improve the README for better readability, a more modern feel, and ensure all key information is present. I'll use a clear structure with headings, modern emojis, and bolded text to make it scannable for the hiring manager.
 
-A lightweight dashboard to visualize EC2 usage, costs, and inefficiencies – designed to help bioinformaticians and research teams make better infrastructure decisions without needing deep AWS knowledge.
+-----
 
-Built with Next.js, Tailwind CSS, and Recharts.
+# EC2 Observability Prototype
 
-🚀 Features
-🔍 EC2 Instance Utilization
+## 🚀 Overview
 
-CPU, RAM, GPU, uptime, and cost/hr
+This project is a prototype built for the Tracer take-home assessment. It's designed to help bioinformaticians and research teams gain visibility into their AWS infrastructure. The dashboard visualizes EC2 usage, costs, and potential waste in a clear, actionable way.
 
-Flags underutilized servers with color indicators
+## ✨ Core Features
 
-Sorting & filtering by region and instance type
+### EC2 Instance Utilization Table
 
-💰 Cost Attribution Panel
+  - **Metrics**: Displays key metrics like CPU, RAM, GPU, uptime, and **Cost/hr**.
+  - **Insights**: Flags underutilized servers with color-coded indicators.
+  - **Filtering**: Allows for sorting and filtering by region and instance type to quickly isolate relevant resources.
 
-Breaks down spend by region, instance type, and job (tag-based)
+### Cost Attribution Panel
 
-Toggle between table view and chart view (bar/pie)
+  - **Breakdown**: Visualizes spending broken down by region and instance type.
+  - **Views**: Provides toggleable table and chart views for different perspectives.
+  - **Anomalies**: Highlights heavy spending in specific regions or on particular instance types.
 
-Highlights anomalies (e.g., heavy spend concentrated in one region)
+### Live Cloud Cost Overview
 
-📈 Cloud Cost Overview
+  - **Key Performance Indicators (KPIs)**: Shows total cost, daily burn rate, and a projected monthly spend.
+  - **Trend Analysis**: Includes a 7-day trend chart with markers for cost anomalies.
 
-KPIs: Total cost, Daily burn, Projected monthly spend
+## ⚙️ Tech Stack
 
-Trend chart (7d) with anomaly markers and recommendations
+  - **Next.js**: A modern React framework for building fast, scalable applications.
+  - **Tailwind CSS**: A utility-first CSS framework for rapid and consistent styling.
+  - **Recharts**: A composable charting library for building custom data visualizations.
+  - **Data Source**: Configurable to use either mock data or the AWS API (SDK).
 
-Simple, scannable view to spot spikes or changes at a glance
+## 🚀 Getting Started
 
-⚡ Tech Stack
+### Prerequisites
 
-Next.js
- – React framework
+  - Node.js (v18+)
+  - npm
 
-Tailwind CSS
- – Utility-first styling
+### Setup
 
-Recharts
- – Data visualization
+1.  **Clone the repository:**
+    ```bash
+    git clone <your-repo-url>
+    cd ec2-observability-prototype
+    ```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+3.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    The application will be available at [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000).
 
-AWS SDK
- (optional) – Live data integration
+## 📊 Data Configuration
 
-Mock data (/data/mock.json) – For development/demo mode
+The prototype also has mock data for a consistent experience.
 
-🔧 Setup
-# Clone repo
-git clone <your-repo-url>
-cd ec2-observability
+to access mock data -> config.js -> USE_MOCK_DATA = true
 
-# Install dependencies
-npm install
+### Using Real AWS Data (Optional)
 
-# Run locally
-npm run dev
+To use real data from your AWS account, follow these steps:
 
-
-App will be available at: http://localhost:3000
-
-📊 Data Sources
-
-This prototype can run in two modes:
-
-Mock Data (default)
-
-Uses /data/mock.json for consistent demo behavior
-
-Great for prototyping without AWS setup
-
-AWS API Integration (optional)
-
-Requires IAM role with read-only access to:
-
-EC2
-
-CloudWatch
-
-Cost Explorer
-
-To enable:
-
-Add credentials in .env.local
-
-Restart the dev server (npm run dev)
-
-Example .env.local:
-
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-AWS_REGION=us-east-1
-
-✍️ Design Notes
-
-Focused on quick, actionable insights instead of raw metrics.
-
-Example: “Instance idle for 3 days → $50 wasted” is more valuable than just a CPU % chart.
-
-Used mock data for speed and reliability during prototyping.
-
-Future extension: add team/job-level attribution via AWS tags for finer accountability.
-
-📸 Screenshots
-
-(Add your screenshots of Utilization Table, Cost Attribution, and Cost Overview here)
-
-✅ Deliverables
-
-Working prototype (this repo)
-
-Design write-up (separate doc)
-
-Supports both mock and live AWS data
+1.  Create an `.env.local` file in the project root.
+2.  Set your AWS credentials and region.
+    ```env
+    AWS_ACCESS_KEY_ID=your_access_key
+    AWS_SECRET_ACCESS_KEY=your_secret_key
+    AWS_REGION=your_aws_region
+    ```
+3.  Ensure the IAM role has read-only access to **EC2, CloudWatch, and Cost Explorer**.
+4.  Restart the development server (`npm run dev`).
