@@ -1,34 +1,33 @@
 EC2 Observability Prototype
-🚀 Overview
 
-This prototype is part of the Tracer take-home assessment.
-It visualises EC2 usage, costs, and waste in a simple dashboard built with Next.js + Tailwind + Recharts.
+A lightweight dashboard to visualize EC2 usage, costs, and inefficiencies – designed to help bioinformaticians and research teams make better infrastructure decisions without needing deep AWS knowledge.
 
-The goal: help bioinformaticians and research teams make smarter infrastructure decisions without needing deep AWS knowledge.
+Built with Next.js, Tailwind CSS, and Recharts.
 
-📦 Features
+🚀 Features
+🔍 EC2 Instance Utilization
 
-EC2 Instance Utilisation Table
+CPU, RAM, GPU, uptime, and cost/hr
 
-CPU, RAM, GPU, uptime, cost/hr
-
-Flags underutilised servers with color indicators
+Flags underutilized servers with color indicators
 
 Sorting & filtering by region and instance type
 
-Cost Attribution Panel
+💰 Cost Attribution Panel
 
-Breaks down spend by region & instance type
+Breaks down spend by region, instance type, and job (tag-based)
 
-Toggleable table and chart view
+Toggle between table view and chart view (bar/pie)
 
-Highlights anomalies (e.g., heavy spend in one region)
+Highlights anomalies (e.g., heavy spend concentrated in one region)
 
-Live Cloud Cost Overview
+📈 Cloud Cost Overview
 
-KPIs: total cost, daily burn, projected monthly spend
+KPIs: Total cost, Daily burn, Projected monthly spend
 
-Trend chart (7d) with anomaly markers
+Trend chart (7d) with anomaly markers and recommendations
+
+Simple, scannable view to spot spikes or changes at a glance
 
 ⚡ Tech Stack
 
@@ -36,12 +35,15 @@ Next.js
  – React framework
 
 Tailwind CSS
- – Styling
+ – Utility-first styling
 
 Recharts
- – Charts & graphs
+ – Data visualization
 
-[Mock Data / AWS SDK] – Data source (depending on config)
+AWS SDK
+ (optional) – Live data integration
+
+Mock data (/data/mock.json) – For development/demo mode
 
 🔧 Setup
 # Clone repo
@@ -55,36 +57,58 @@ npm install
 npm run dev
 
 
-App will be available at http://localhost:3000.
+App will be available at: http://localhost:3000
 
-📊 Data Source
+📊 Data Sources
 
-This prototype works with either:
+This prototype can run in two modes:
 
-Mock data (default) – included in /data/mock.json.
+Mock Data (default)
 
-AWS API integration (optional) – requires IAM role with read-only access to EC2, CloudWatch, and Cost Explorer.
+Uses /data/mock.json for consistent demo behavior
 
-To use AWS data:
+Great for prototyping without AWS setup
 
-Set credentials in .env.local
+AWS API Integration (optional)
 
-Run npm run dev
+Requires IAM role with read-only access to:
 
-✍️ Notes on Design
+EC2
 
-Assumption: Users want quick, actionable insights (e.g., “Instance idle for 3 days → $50 wasted”) instead of raw metrics.
+CloudWatch
 
-Tradeoff: Used mock data for consistency and speed instead of full AWS integration.
+Cost Explorer
 
-Not Implemented: Team/job-level attribution (would extend cost breakdown with metadata tags).
+To enable:
+
+Add credentials in .env.local
+
+Restart the dev server (npm run dev)
+
+Example .env.local:
+
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+AWS_REGION=us-east-1
+
+✍️ Design Notes
+
+Focused on quick, actionable insights instead of raw metrics.
+
+Example: “Instance idle for 3 days → $50 wasted” is more valuable than just a CPU % chart.
+
+Used mock data for speed and reliability during prototyping.
+
+Future extension: add team/job-level attribution via AWS tags for finer accountability.
 
 📸 Screenshots
 
-(Add screenshots of the 3 main components here)
+(Add your screenshots of Utilization Table, Cost Attribution, and Cost Overview here)
 
 ✅ Deliverables
 
 Working prototype (this repo)
 
-Short write-up with design decisions (sent separately)
+Design write-up (separate doc)
+
+Supports both mock and live AWS data
