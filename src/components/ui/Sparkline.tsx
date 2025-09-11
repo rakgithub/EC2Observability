@@ -1,6 +1,6 @@
 "use client";
 
-import { CLASSIFIED_LOAD } from "@/constants/ec2Table";
+import { CLASSIFIED_LOAD, LOAD_TOOLTIP_DETAILS } from "@/constants/ec2Table";
 import React, { useMemo } from "react";
 import {
   LineChart,
@@ -10,10 +10,13 @@ import {
   TooltipProps,
 } from "recharts";
 import { TooltipPayload } from "recharts/types/state/tooltipSlice";
+import Tooltip from "./Tooltip";
+import { Info } from "lucide-react";
+import { COLORS } from "../features/CloudCost/utils";
 
 interface SparklineProps {
   data: { Timestamp: string; Average: number }[];
-  color?: string;
+ color?: string;
 }
 
 interface ChartPoint {
@@ -40,30 +43,31 @@ const ChartTooltip: React.FC<MyTooltipProps> = ({ payload }) => {
     </div>
   );
 };
-
-function classifyLoad(values: number[]): { label: string; color: string } {
+function classifyLoad(values: number[]): { key: string,label: string; color: string } {
+  // WHEN NOT ENOUGH DATA
   if (values.length < 3) {
-    return { label: CLASSIFIED_LOAD.COLLECTING_DATA, color: "text-gray-400" };
+    return { key: "STABLE", label: CLASSIFIED_LOAD.COLLECTING_DATA, color: "text-gray-400" };
   }
-  debugger;
+
   const avg = values.reduce((a, b) => a + b, 0) / values.length;
   const variance =
     values.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / values.length;
   const slope = values[values.length - 1] - values[0];
 
   if (avg < 10 && variance < 5)
-    return { label: CLASSIFIED_LOAD.IDLE, color: "text-red-400" };
+    return { key: "IDLE", label: CLASSIFIED_LOAD.IDLE, color: "text-gray-400" };
   if (variance > 50)
-    return { label: CLASSIFIED_LOAD.BUSTY, color: "text-yellow-400" };
+    return { key: "BUSTY", label: CLASSIFIED_LOAD.BUSTY, color: "text-yellow-400" };
   if (avg > 70)
-    return { label: CLASSIFIED_LOAD.HIGH, color: "text-orange-400" };
+    return { key:"HIGH",label: CLASSIFIED_LOAD.HIGH, color: "text-orange-400" };
   return {
+    key: "STABLE",
     label: slope > 0 ? CLASSIFIED_LOAD.RISING : CLASSIFIED_LOAD.STABLE,
     color: "text-green-400",
   };
 }
 
-const Sparkline: React.FC<SparklineProps> = ({ data, color = "#4CAF50" }) => {
+const Sparkline: React.FC<SparklineProps> = ({ data}) => {
   const chartData = useMemo<ChartPoint[]>(
     () =>
       data?.slice(-20).map((d) => ({
@@ -76,7 +80,7 @@ const Sparkline: React.FC<SparklineProps> = ({ data, color = "#4CAF50" }) => {
     [data]
   );
 
-  const { label, color: labelColor } = useMemo(() => {
+  const { key,label, color: labelColor } = useMemo(() => {
     const values = chartData.map((d) => d.value);
     return classifyLoad(values);
   }, [chartData]);
@@ -89,7 +93,7 @@ const Sparkline: React.FC<SparklineProps> = ({ data, color = "#4CAF50" }) => {
             <Line
               type="monotone"
               dataKey="value"
-              stroke={color}
+              stroke={COLORS[key]}
               strokeWidth={2}
               dot={false}
             />
@@ -97,7 +101,12 @@ const Sparkline: React.FC<SparklineProps> = ({ data, color = "#4CAF50" }) => {
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <span className={`text-[10px] mt-1 ${labelColor}`}>{label}</span>
+       <div className={`flex items-center gap-1 text-[10px] mt-1 ${labelColor}`}>
+         <span className="truncate whitespace-nowrap overflow-hidden text-ellipsis">{label}</span>
+        <Tooltip content={LOAD_TOOLTIP_DETAILS[key as keyof typeof LOAD_TOOLTIP_DETAILS] || "No description available"}>
+          <Info className="w-3 h-3 text-gray-400 cursor-help" />
+        </Tooltip>
+      </div>
     </div>
   );
 };

@@ -161,7 +161,7 @@ const CostAttributionPanel: React.FC = () => {
         showOverlay={showOverlay}
         totalCost={totalCost}
         attributed={totalCost}
-        unaccounted={totalCost - totalCost}
+        unaccounted={unaccountedCost}
         chartData={chartData}
         dimension={dimension}
       />

@@ -26,6 +26,10 @@ async function fetchCosts(params: {
   granularity: "DAILY" | "MONTHLY" | "HOURLY";
   groupBy?: { Type: "DIMENSION" | "TAG"; Key: string }[];
 }) {
+  // MOCK DATA
+  if (USE_MOCK_DATA) {
+    return mockCostData();
+  }
   const cmd = new GetCostAndUsageCommand({
     TimePeriod: {
       Start: formatDate(params.start),
@@ -74,6 +78,7 @@ export async function getCosts(timeRange: TimeRange) {
       end: now,
       granularity: granularity,
     });
+
     const totalSpend = kpiResults.reduce(
       (sum, r) => sum + parseCost(r.Total?.UnblendedCost?.Amount),
       0
@@ -244,11 +249,7 @@ export async function getCosts(timeRange: TimeRange) {
         Average: avg * daysInMonth,
       };
     });
-    // USE MOCK DATA
-    if (USE_MOCK_DATA) {
-      return mockCostData();
-    }
-
+   
     return {
       totalSpend: +totalSpend.toFixed(2),
       totalSpendTrend,

@@ -1,5 +1,7 @@
 import { DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { ec2Client } from "../aws";
+import { USE_MOCK_DATA } from "@/config";
+import { mockInstancesData } from "@/mockData/mock";
 
 export interface InstanceData {
   id: string;
@@ -17,6 +19,10 @@ function resolveRegion(): string {
 
 export async function getInstances(): Promise<{ instances: InstanceData[] }> {
   try {
+    // MOCK DATA
+    if (USE_MOCK_DATA) {
+      return mockInstancesData();
+    }
     const command = new DescribeInstancesCommand({});
     const response = await ec2Client.send(command);
 

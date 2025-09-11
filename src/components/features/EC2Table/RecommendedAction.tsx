@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MoreVertical } from "lucide-react";
 import { getActionLabel } from "./utils";
-
+import ECTooltip from "@/components/ui/Tooltip";
 interface RecommendedActionProps {
   cpu: number;
   gpu: number;
@@ -22,12 +22,12 @@ const RecommendedAction: React.FC<RecommendedActionProps> = ({
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const label = getActionLabel(cpu, gpu, uptime);
+  const { label, tooltip } = getActionLabel(cpu, gpu, uptime);
 
   const handleAction = (action: string) => {
     setOpen(false);
     console.log(`Action: ${action} on instance ${instanceId}`);
-    // TODO: connect to API
+    // TODO: connect to API to perform the action (e.g., stop or resize)
   };
 
   useEffect(() => {
@@ -50,28 +50,32 @@ const RecommendedAction: React.FC<RecommendedActionProps> = ({
 
   return (
     <div ref={dropdownRef} className="relative flex items-center gap-2">
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${
-          label === "OK"
-            ? "bg-teal-900/50 text-teal-400"
-            : "bg-red-900/50 text-red-400"
-        }`}
-      >
-        {label}
-      </span>
+     
+     <ECTooltip content={tooltip}>
+       <span
+  className={`px-3 py-1 rounded-full text-xs font-medium ${
+    label === "All Good"
+      ? "bg-teal-900/50 text-teal-400"
+      : "bg-red-900/50 text-red-400"
+  } whitespace-nowrap`}
+>
+  {label}
+</span>
+      </ECTooltip>
 
-      {label !== "OK" && (
+      {label !== "All Good" && (
         <>
           <button
             onClick={() => setOpen(!open)}
             className="p-1 rounded text-teal-400 hover:bg-teal-900/50 transition-all duration-200"
+            aria-label="Show Actions"
           >
             <MoreVertical className="w-4 h-4" />
           </button>
 
           {open && (
             <div className="absolute right-0 top-8 z-20 w-40 bg-gray-900 border border-gray-700 rounded-lg shadow-lg">
-              {label === "Consider stopping" && (
+              {label === "Stop Instance" && (
                 <button
                   onClick={() => handleAction("stop")}
                   className={
@@ -82,7 +86,7 @@ const RecommendedAction: React.FC<RecommendedActionProps> = ({
                   Stop Instance
                 </button>
               )}
-              {(label === "Upgrade GPU" || label === "Upgrade instance") && (
+              {(label === "Upgrade GPU" || label === "Upgrade Instance") && (
                 <button
                   onClick={() => handleAction("resize")}
                   className={

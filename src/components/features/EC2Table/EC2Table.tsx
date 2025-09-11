@@ -5,37 +5,32 @@ import { useError } from "@/context/ErrorProvider";
 import { LABELS } from "@/constants/ec2Table";
 import TableHeader from "./TableHeader";
 import InstanceStatsCards from "./InstanceStatsCards";
-import { useEC2Instances } from "@/hooks/useEc2Instances";
 import { useEC2Table } from "@/hooks/useEC2Table";
 import { useMemo } from "react";
 import { EC2TableBody } from "./EC2TableBody";
 import { EC2TableHead } from "./EC2TableHeader";
-
-interface RangeOption {
-  label: string;
-  value: string;
-}
-
-interface RangeOptions {
-  "cpu-usage": RangeOption[];
-  "ram-usage": RangeOption[];
-  "gpu-usage": RangeOption[];
-  computedUptimeHours: RangeOption[];
-}
+import { useEC2Instances } from "@/hooks/useEC2Instances";
+import { rangeOptions, RangeOptions } from "./utils";
 
 const EC2Table: React.FC = () => {
   const { instances, totalCount, error, isLoading } = useEC2Instances();
   const table = useEC2Table(instances);
   const { showError } = useError();
 
-  const isWaste = (
-    cpu: number | undefined,
-    uptimeHours: number | undefined
-  ): boolean => {
-    if (cpu === undefined || uptimeHours === undefined) return false;
-    return cpu < 15 && uptimeHours > 24;
-  };
+const isWaste = (
+  cpu: number | undefined,
+  ram: number | undefined,
+  uptimeHours: number | undefined,
+  diskIO: number | undefined
+): boolean => {
+  if (cpu === undefined || uptimeHours === undefined) return false;
 
+  const isLowCpu = cpu < 15;
+  const isHighRamUsage = ram && ram > 80; // threshold for high RAM usage
+  const isLowDiskIO = diskIO && diskIO < 5; // threshold for low disk
+
+  return isLowCpu && uptimeHours > 24 && !isHighRamUsage && !isLowDiskIO;
+};
   const { idleCount, busyCount, healthyCount } = useMemo(() => {
     const idle = instances.filter((i) => i.cpu && i.cpu < 15).length;
     const busy = instances.filter((i) => i.cpu && i.cpu > 70).length;
@@ -49,33 +44,6 @@ const EC2Table: React.FC = () => {
     "gpu-usage",
     "computedUptimeHours",
   ];
-
-  const rangeOptions: RangeOptions = {
-    "cpu-usage": [
-      { label: "All", value: "" },
-      { label: "Idle (<15%)", value: "0,15" },
-      { label: "Healthy (15–70%)", value: "15,70" },
-      { label: "Busy (>70%)", value: "70,100" },
-    ],
-    "ram-usage": [
-      { label: "All", value: "" },
-      { label: "Idle (<15%)", value: "0,15" },
-      { label: "Healthy (15–70%)", value: "15,70" },
-      { label: "Busy (>70%)", value: "70,100" },
-    ],
-    "gpu-usage": [
-      { label: "All", value: "" },
-      { label: "Idle (<15%)", value: "0,15" },
-      { label: "Healthy (15–70%)", value: "15,70" },
-      { label: "Busy (>70%)", value: "70,100" },
-    ],
-    computedUptimeHours: [
-      { label: "All", value: "" },
-      { label: "Short-term (<24h)", value: "0,24" },
-      { label: "Standard Workload (1-7 days)", value: "24,168" },
-      { label: "Long-term (>1 week)", value: "168,999999" },
-    ],
-  };
 
   if (isLoading)
     return (

@@ -1,6 +1,7 @@
+import { EC2Instance } from "@/types/ec2";
 import { GetMetricDataCommandOutput } from "@aws-sdk/client-cloudwatch";
 
-export const mockCostData = () => {
+export const mockCostData1 = () => {
   // Realistic EC2 instance pricing (USD/hour, us-east-1 On-Demand)
   const instancePricing = {
     "t2.micro": 0.0116,
@@ -28,7 +29,7 @@ export const mockCostData = () => {
     "r5.large": { busy: 0.75, idle: 0.25 }, // Memory-intensive
   };
 
-  // Simulate 7 days of usage history with anomalies
+
   const mockHistory = Array.from({ length: 7 }).map((_, i) => {
     const day = new Date();
     day.setDate(day.getDate() - (6 - i));
@@ -262,7 +263,7 @@ const getRandomFloat = (min: number, max: number): number => {
   return Math.random() * (max - min) + min;
 };
 
-export const getMockMetrics = (
+export const getMockMetrics1 = (
   metricName: string
 ): GetMetricDataCommandOutput => {
   const dataPointsCount = 5;
@@ -286,9 +287,7 @@ export const getMockMetrics = (
   }
 
   for (let i = 0; i < dataPointsCount; i++) {
-    // Generate timestamps at 5-minute intervals
     timestamps.push(new Date(now - i * 5 * 60 * 1000));
-    // Generate a random average value within the specified range
     values.push(getRandomFloat(min, max));
   }
   return {
@@ -302,3 +301,447 @@ export const getMockMetrics = (
     $metadata: {},
   };
 };
+
+export interface InstanceData {
+  id: string;
+  region: string;
+  type: string;
+  launchTime: string;
+}
+
+export const getMockInstances = (): {instances: InstanceData[]} => {
+  const instances = [
+  {
+    id: "i-0abcd1234efgh5678",
+    region: "us-east-1",
+    type: "t2.micro",
+    launchTime: "2023-08-15T12:00:00.000Z",
+  },
+  {
+    id: "i-1bcde2345fghj6789",
+    region: "us-east-1",
+    type: "m5.large",
+    launchTime: "2023-07-20T08:45:00.000Z",
+  },
+  {
+    id: "i-2efgh3456ijkm7890",
+    region: "us-west-2",
+    type: "t3.medium",
+    launchTime: "2023-09-01T09:30:00.000Z",
+  },
+  {
+    id: "i-3ghij4567klmn8901",
+    region: "eu-central-1",
+    type: "c5.xlarge",
+    launchTime: "2023-06-10T10:15:00.000Z",
+  },
+  {
+    id: "i-4ijkl5678mnop9012",
+    region: "ap-southeast-1",
+    type: "r5.2xlarge",
+    launchTime: "2023-05-22T13:45:00.000Z",
+  },
+  {
+    id: "i-5mnop6789qrst0123",
+    region: "us-east-1",
+    type: "t3a.nano",
+    launchTime: "2023-07-04T14:00:00.000Z",
+  },
+  {
+    id: "i-6opqrs7890tuvw1234",
+    region: "us-west-1",
+    type: "m6g.medium",
+    launchTime: "2023-04-18T11:25:00.000Z",
+  },
+];
+
+return {instances: instances}
+}
+
+export const mockInstances: EC2Instance[] = [
+  {
+    id: "i-0abcd1234efgh5678",
+    region: "us-east-1",
+    type: "t2.micro",
+    cpu: 1.2,
+    ram: 1,
+    uptimeHours: 120,
+    costPerHour: 0.0116,
+    launchTime: "2023-08-01T12:00:00.000Z",
+    gpu: 0,
+    computedUptimeHours: 120,
+  },
+  {
+    id: "i-1bcde2345fghj6789",
+    region: "us-west-2",
+    type: "m5.large",
+    cpu: 2.8,
+    ram: 8,
+    uptimeHours: 500,
+    costPerHour: 0.096,
+    launchTime: "2023-07-15T09:30:00.000Z",
+    gpu: 0,
+    computedUptimeHours: 500,
+  },
+  {
+    id: "i-2efgh3456ijkm7890",
+    region: "eu-west-1",
+    type: "c5.xlarge",
+    cpu: 4.5,
+    ram: 8,
+    uptimeHours: 150,
+    costPerHour: 0.17,
+    launchTime: "2023-08-10T14:00:00.000Z",
+    gpu: 0,
+    computedUptimeHours: 150,
+  },
+  {
+    id: "i-3ghij4567klmn8901",
+    region: "ap-south-1",
+    type: "r5.2xlarge",
+    cpu: 16,
+    ram: 64,
+    uptimeHours: 800,
+    costPerHour: 0.252,
+    launchTime: "2023-05-20T11:00:00.000Z",
+    gpu: 0,
+    computedUptimeHours: 800,
+  },
+  {
+    id: "i-4ijkl5678mnop9012",
+    region: "us-east-1",
+    type: "g4dn.xlarge",
+    cpu: 6.4,
+    ram: 16,
+    uptimeHours: 1000,
+    costPerHour: 0.526,
+    launchTime: "2023-04-10T10:30:00.000Z",
+    gpu: 1,
+    computedUptimeHours: 1000,
+  },
+  {
+    id: "i-5mnop6789qrst0123",
+    region: "us-west-1",
+    type: "m5.large",
+    cpu: 2.2,
+    ram: 8,
+    uptimeHours: 200,
+    costPerHour: 0.096,
+    launchTime: "2023-07-25T13:00:00.000Z",
+    gpu: 0,
+    computedUptimeHours: 200,
+  },
+  {
+    id: "i-6opqrs7890tuvw1234",
+    region: "ap-northeast-1",
+    type: "t3.medium",
+    cpu: 2.5,
+    ram: 8,
+    uptimeHours: 300,
+    costPerHour: 0.0416,
+    launchTime: "2023-06-12T16:45:00.000Z",
+    gpu: 0,
+    computedUptimeHours: 300,
+  },
+];
+
+export function mockCostData() {
+  // Example of mock data in the same format as the AWS Cost Explorer response
+  return [
+    {
+      TimePeriod: {
+        Start: "2023-08-01",
+        End: "2023-08-01",
+      },
+      Total: {
+        UnblendedCost: {
+          Amount: "500.00",
+          Unit: "USD",
+        },
+      },
+      Groups: [
+        {
+          Keys: ["us-east-1"],
+          Metrics: {
+            UnblendedCost: {
+              Amount: "750.00",
+              Unit: "USD",
+            },
+          },
+        },
+        {
+          Keys: ["us-west-1"],
+          Metrics: {
+            UnblendedCost: {
+              Amount: "490.00",
+              Unit: "USD",
+            },
+          },
+        },
+      ],
+    },
+    {
+      TimePeriod: {
+        Start: "2023-08-02",
+        End: "2023-08-02",
+      },
+      Total: {
+        UnblendedCost: {
+          Amount: "400.00",
+          Unit: "USD",
+        },
+      },
+      Groups: [
+        {
+          Keys: ["us-east-1"],
+          Metrics: {
+            UnblendedCost: {
+              Amount: "370.00",
+              Unit: "USD",
+            },
+          },
+        },
+        {
+          Keys: ["us-west-1"],
+          Metrics: {
+            UnblendedCost: {
+              Amount: "260.00",
+              Unit: "USD",
+            },
+          },
+        },
+      ],
+    },
+    {
+      TimePeriod: {
+        Start: "2023-08-02",
+        End: "2023-08-02",
+      },
+      Total: {
+        UnblendedCost: {
+          Amount: "400.00",
+          Unit: "USD",
+        },
+      },
+      Groups: [
+        {
+          Keys: ["us-east-1"],
+          Metrics: {
+            UnblendedCost: {
+              Amount: "300.00",
+              Unit: "USD",
+            },
+          },
+        },
+        {
+          Keys: ["SE-west-1"],
+          Metrics: {
+            UnblendedCost: {
+              Amount: "250.00",
+              Unit: "USD",
+            },
+          },
+        },
+      ],
+    },
+     {
+      TimePeriod: {
+        Start: "2023-08-02",
+        End: "2023-08-02",
+      },
+      Total: {
+        UnblendedCost: {
+          Amount: "500.00",
+          Unit: "USD",
+        },
+      },
+      Groups: [
+        {
+          Keys: ["se-east-1"],
+          Metrics: {
+            UnblendedCost: {
+              Amount: "120.00",
+              Unit: "USD",
+            },
+          },
+        },
+        {
+          Keys: ["se-east-1"],
+          Metrics: {
+            UnblendedCost: {
+              Amount: "190.00",
+              Unit: "USD",
+            },
+          },
+        },
+      ],
+    },
+  ];
+}
+
+export function mockInstancesData() {
+  // Example of mock data in the same format as the AWS EC2 DescribeInstances response
+  return {
+    instances: [
+      {
+        id: "i-0abcd1234efgh5678",
+        region: "us-east-1",
+        type: "t2.micro",
+        launchTime: "2023-08-15T10:00:00Z",
+      },
+      {
+        id: "i-1abcd1234efgh5678",
+        region: "us-east-1",
+        type: "t2.small",
+        launchTime: "2023-08-16T10:00:00Z",
+      },
+      {
+        id: "i-2abcd1234efgh5678",
+        region: "us-west-2",
+        type: "m5.large",
+        launchTime: "2023-08-17T10:00:00Z",
+      },
+      {
+        id: "i-3abcd1234efgh5678",
+        region: "us-west-2",
+        type: "t3.medium",
+        launchTime: "2023-08-18T10:00:00Z",
+      },
+    ],
+  };
+}
+
+
+export function getMockMetrics(metricName: string, instanceId: string) {
+  const baseTimestamp = Date.now() - 5 * 60 * 1000; // 5 minutes ago
+
+  const mockData = {
+    "CPUUtilization": {
+      // Simulating varying CPU utilization over 5 minutes
+      "i-0abcd1234efgh5678": {
+        MetricDataResults: [
+          {
+            Id: "cpuUtilization",
+            Timestamps: [
+              new Date(baseTimestamp - 4 * 60 * 1000), // 4 minutes ago
+              new Date(baseTimestamp - 3 * 60 * 1000), // 3 minutes ago
+              new Date(baseTimestamp - 2 * 60 * 1000), // 2 minutes ago
+              new Date(baseTimestamp - 1 * 60 * 1000), // 1 minute ago
+              new Date(baseTimestamp), // current time
+            ],
+            Values: [10, 20, 15, 40, 35], // CPU utilization in percentage
+          },
+        ],
+      },
+      "i-0xyz9876mnop4321": {
+        MetricDataResults: [
+          {
+            Id: "cpuUtilization",
+            Timestamps: [
+              new Date(baseTimestamp - 4 * 60 * 1000),
+              new Date(baseTimestamp - 3 * 60 * 1000),
+              new Date(baseTimestamp - 2 * 60 * 1000),
+              new Date(baseTimestamp - 1 * 60 * 1000),
+              new Date(baseTimestamp),
+            ],
+            Values: [50, 55, 40, 30, 60],
+          },
+        ],
+      },
+    },
+    "DiskReadOps": {
+      "i-0abcd1234efgh5678": {
+        MetricDataResults: [
+          {
+            Id: "diskReadOps",
+            Timestamps: [
+              new Date(baseTimestamp - 4 * 60 * 1000),
+              new Date(baseTimestamp - 3 * 60 * 1000),
+              new Date(baseTimestamp - 2 * 60 * 1000),
+              new Date(baseTimestamp - 1 * 60 * 1000),
+              new Date(baseTimestamp),
+            ],
+            Values: [500, 450, 600, 550, 480], // Disk read operations count
+          },
+        ],
+      },
+      "i-0xyz9876mnop4321": {
+        MetricDataResults: [
+          {
+            Id: "diskReadOps",
+            Timestamps: [
+              new Date(baseTimestamp - 4 * 60 * 1000),
+              new Date(baseTimestamp - 3 * 60 * 1000),
+              new Date(baseTimestamp - 2 * 60 * 1000),
+              new Date(baseTimestamp - 1 * 60 * 1000),
+              new Date(baseTimestamp),
+            ],
+            Values: [300, 320, 280, 350, 310], // Disk read operations count
+          },
+        ],
+      },
+    },
+    "NetworkIn": {
+      "i-0abcd1234efgh5678": {
+        MetricDataResults: [
+          {
+            Id: "networkIn",
+            Timestamps: [
+              new Date(baseTimestamp - 4 * 60 * 1000),
+              new Date(baseTimestamp - 3 * 60 * 1000),
+              new Date(baseTimestamp - 2 * 60 * 1000),
+              new Date(baseTimestamp - 1 * 60 * 1000),
+              new Date(baseTimestamp),
+            ],
+            Values: [200, 180, 220, 210, 190], // Network traffic in bytes
+          },
+        ],
+      },
+      "i-0xyz9876mnop4321": {
+        MetricDataResults: [
+          {
+            Id: "networkIn",
+            Timestamps: [
+              new Date(baseTimestamp - 4 * 60 * 1000),
+              new Date(baseTimestamp - 3 * 60 * 1000),
+              new Date(baseTimestamp - 2 * 60 * 1000),
+              new Date(baseTimestamp - 1 * 60 * 1000),
+              new Date(baseTimestamp),
+            ],
+            Values: [500, 550, 600, 520, 530], // Network traffic in bytes
+          },
+        ],
+      },
+    },
+  };
+
+  // Fetch the mock data for the specific instanceId and metricName
+  return mockData[metricName]?.[instanceId] || {
+    MetricDataResults: [
+      {
+        Id: "unknownMetric",
+        Timestamps: [
+          new Date(baseTimestamp - 4 * 60 * 1000),
+          new Date(baseTimestamp - 3 * 60 * 1000),
+          new Date(baseTimestamp - 2 * 60 * 1000),
+          new Date(baseTimestamp - 1 * 60 * 1000),
+          new Date(baseTimestamp),
+        ],
+        Values: [0, 0, 0, 0, 0],
+      },
+    ],
+  };
+}
+
+export function getMockMetricsData(metricName: string, instanceId: string) {
+    const mockResponse = getMockMetrics(metricName, instanceId); 
+    const metrics = mockResponse.MetricDataResults?.[0]?.Values || [];
+    return metrics.map((value: number, index: number) => ({
+        Timestamp:
+          mockResponse.MetricDataResults?.[0]?.Timestamps?.[index]?.toISOString() ||
+          "",
+        Average: value || 0,
+        Unit: "Percent",
+    }));
+}
+

@@ -1,10 +1,14 @@
 import { GetMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 import { cwClient } from "../aws";
 import { USE_MOCK_DATA } from "@/config";
-import { getMockMetrics } from "@/mockData/mock";
+import {getMockMetricsData } from "@/mockData/mock";
 
 export async function getMetrics(instanceId: string, metricName: string) {
   try {
+    // MOCK DATA
+   if (USE_MOCK_DATA) {
+     return getMockMetricsData(instanceId, metricName);
+    }
     const command = new GetMetricDataCommand({
       MetricDataQueries: [
         {
@@ -25,10 +29,7 @@ export async function getMetrics(instanceId: string, metricName: string) {
       StartTime: new Date(Date.now() - 5 * 60 * 1000),
       EndTime: new Date(),
     });
-    let response = await cwClient.send(command);
-    if (USE_MOCK_DATA) {
-      response = getMockMetrics(metricName);
-    }
+    const response = await cwClient.send(command);
     const metrics = response.MetricDataResults?.[0]?.Values || [];
     return metrics.map((value, index) => ({
       Timestamp:

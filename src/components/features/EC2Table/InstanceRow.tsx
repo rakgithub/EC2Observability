@@ -76,7 +76,6 @@ const InstanceRow: React.FC<InstanceRowProps> = ({
     if (value === undefined || isNaN(value)) return LABELS.NA;
     return `${value.toFixed(2)}%`;
   };
-
   return (
     <tr
       className={`border-t border-gray-700 transition-all duration-200 ${
@@ -88,8 +87,6 @@ const InstanceRow: React.FC<InstanceRowProps> = ({
       <td className="px-4 py-3 text-gray-100">{instance.id}</td>
       <td className="px-4 py-3 text-gray-100">{instance.region}</td>
       <td className="px-4 py-3 text-gray-100">{instance.type}</td>
-
-      {/* CPU */}
       <td className="px-4 py-3 align-middle">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 w-28">
@@ -98,11 +95,9 @@ const InstanceRow: React.FC<InstanceRowProps> = ({
               {formatPercentage(cpu || 0)}
             </span>
           </div>
-          {cpuMetrics && <Sparkline data={cpuMetrics} color="#14b8a6" />}
+          {cpuMetrics && <Sparkline data={cpuMetrics} />}
         </div>
       </td>
-
-      {/* RAM */}
       <td className="px-4 py-3 align-middle">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 w-28">
@@ -111,11 +106,9 @@ const InstanceRow: React.FC<InstanceRowProps> = ({
               {formatPercentage(ram || 0)}
             </span>
           </div>
-          {ramMetrics && <Sparkline data={ramMetrics} color="#60a5fa" />}
+          {ramMetrics && <Sparkline data={ramMetrics} />}
         </div>
       </td>
-
-      {/* GPU */}
       <td className="px-4 py-3 align-middle">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 w-28">
@@ -124,19 +117,13 @@ const InstanceRow: React.FC<InstanceRowProps> = ({
               {formatPercentage(gpu || 0)}
             </span>
           </div>
-          {gpuMetrics && <Sparkline data={gpuMetrics} color="#f59e0b" />}
+          {gpuMetrics && <Sparkline data={gpuMetrics} />}
         </div>
       </td>
-
-      {/* Uptime */}
       <td className="px-4 py-3 text-gray-100">{formatUptime(uptimeHours)}</td>
-
-      {/* Cost/hr */}
       <td className="px-4 py-3 text-gray-100">
         {costPerHour !== undefined ? `$${costPerHour.toFixed(4)}` : LABELS.NA}
       </td>
-
-      {/* Status */}
       <td className="px-4 py-3">
         {isWaste(cpu, uptimeHours) ? (
           <span className="px-2 py-1 bg-red-900/50 text-red-400 rounded-full text-xs font-medium">
@@ -148,8 +135,6 @@ const InstanceRow: React.FC<InstanceRowProps> = ({
           </span>
         )}
       </td>
-
-      {/* Action */}
       <td className="px-4 py-3">
         <RecommendedAction
           cpu={cpu || 0}

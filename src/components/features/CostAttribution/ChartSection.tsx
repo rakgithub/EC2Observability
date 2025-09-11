@@ -80,8 +80,8 @@ const ChartSection: React.FC<ChartSectionProps> = ({
               outerRadius={120}
               innerRadius={60}
               dataKey="cost"
-              label={({ name, percent }) =>
-                `${name} ${(percent ?? 0 * 100).toFixed(0)}%`
+              label={({ name, percent = 0 }) =>
+                `${name} ${(percent * 100).toFixed(0)}%`
               }
               labelLine={false}
             >
@@ -89,16 +89,7 @@ const ChartSection: React.FC<ChartSectionProps> = ({
                 <Cell key={i} fill={chartColors[i % chartColors.length]} />
               ))}
             </Pie>
-            <Tooltip
-              content={<CustomTooltip isPie />}
-              contentStyle={{
-                border: "1px solid #374151",
-                backgroundColor: "#111827",
-                borderRadius: "0.375rem",
-                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-              }}
-              itemStyle={{ color: "#F3F4F6" }}
-            />
+          <Tooltip content={<CustomTooltip isPie={true} />} />
           </PieChart>
         )}
       </ResponsiveContainer>

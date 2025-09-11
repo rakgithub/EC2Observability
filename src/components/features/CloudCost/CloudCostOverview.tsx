@@ -17,7 +17,6 @@ const CloudCostOverview: React.FC = () => {
   const { showError } = useError();
 
   const { totalSpend = 0 } = data ?? {};
-
   const metrics = useMemo(() => {
     return data ? buildMetrics(data) : [];
   }, [data]);

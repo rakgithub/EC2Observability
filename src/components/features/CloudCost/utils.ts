@@ -168,3 +168,13 @@ export const buildMetrics = (data: CostsResponse) => {
     },
   ];
 };
+
+export const COLORS = {
+  IDLE: "#6B7280",    
+  BUSTY: "#FBBF24",  
+  HIGH: "#DC2626",    
+  RISING: "#F97316",   
+  STABLE: "#34D399",  
+  COLLECTING_DATA: "#9CA3AF",
+};
+

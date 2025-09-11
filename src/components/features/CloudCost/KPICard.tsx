@@ -37,10 +37,8 @@ const KPICard: React.FC<KPICardProps> = ({
   tooltipContent,
   recommendation,
   history,
-  color = "#14b8a6", // Teal default to match EC2Table theme
 }) => {
   const { Icon: TrendIcon, color: trendColor } = trendConfig[trend];
-
   return (
     <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl shadow-md p-5 transition-all duration-300 hover:scale-105 hover:shadow-teal-500/50">
       <div className="flex items-center justify-between mb-3">
@@ -50,7 +48,6 @@ const KPICard: React.FC<KPICardProps> = ({
         {tooltipContent && (
           <Tooltip
             content={tooltipContent}
-            // className="z-50 bg-gray-900 text-gray-100 border border-gray-700 rounded-md p-2 text-sm shadow-lg"
           >
             <Info
               className="w-4 h-4 text-teal-400 cursor-pointer transition-colors duration-200 hover:text-teal-300"
@@ -67,7 +64,7 @@ const KPICard: React.FC<KPICardProps> = ({
       </div>
       {history && history.length > 0 && (
         <div className="mt-4 h-12">
-          <Sparkline data={history} color={color} />
+          <Sparkline data={history}/>
         </div>
       )}
       {recommendation && (

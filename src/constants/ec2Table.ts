@@ -9,9 +9,9 @@ export const LABELS = {
   COST_PER_HOUR: "Cost/hr",
   STATUS: "Status",
   ACTION: "Action",
-  CPU_USAGE_TOOLTIP: "The percentage of CPU utilized by this instance.",
-  RAM_USAGE_TOOLTIP: "The percentage of RAM utilized by this instance.",
-  GPU_USAGE_TOOLTIP: "The percentage of GPU utilized by this instance.",
+  CPU_USAGE_TOOLTIP: "The percentage of CPU power being used. High usage can indicate heavy workloads or an opportunity for optimization.",
+  RAM_USAGE_TOOLTIP: "The percentage of available memory being used. High usage can lead to performance bottlenecks.",
+  GPU_USAGE_TOOLTIP: "The percentage of GPU power being used. Essential for performance in data science and graphics-intensive applications.",
   CPU: "CPU Usage (%)",
   RAM: "RAM Usage (%)",
   GPU: "GPU Usage (%)",
@@ -29,4 +29,12 @@ export const CLASSIFIED_LOAD = {
   HIGH: "Consistently high load",
   RISING: "Rising usage",
   STABLE: "Stable",
+};
+
+export const LOAD_TOOLTIP_DETAILS = {
+  IDLE: "Idle (flat): Little to no usage, costs remain stable.",
+  BUSTY: "Bursty workload: Occasional spikes due to batch jobs or peak processing.",
+  HIGH: "Consistently high load: Sustained high usage and costs.",
+  RISING: "Rising usage: Gradual increase in usage and costs.",
+  STABLE: "Stable: Usage and costs remain steady.",
 };
