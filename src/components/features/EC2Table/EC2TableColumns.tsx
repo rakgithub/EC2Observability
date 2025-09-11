@@ -130,5 +130,6 @@ export const EC2TableColumns: ColumnDef<EC2Instance>[] = [
       </div>
     ),
     accessorKey: "action",
+    enableSorting: false,
   },
 ];

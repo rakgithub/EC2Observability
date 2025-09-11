@@ -17,6 +17,7 @@ import { ChartType, Dimension, TimeRange, ViewMode } from "@/types/cost";
 import TableSection from "./TableSection";
 import FooterSection from "./FooterSection";
 import ChartSection from "./ChartSection";
+import { chartColors } from "./utils";
 
 const CostAttributionPanel: React.FC = () => {
   const [dimension, setDimension] = useState<"region" | "type" | "job">(
@@ -72,18 +73,6 @@ const CostAttributionPanel: React.FC = () => {
     return baseData;
   }, [dimension, byRegion, byType, byJob, unaccountedCost, isUnaccounted]);
 
-  const chartColors = [
-    "#14b8a6", // Tailwind teal-500
-    "#60a5fa", // Tailwind blue-400
-    "#34d399", // Tailwind emerald-400
-    "#facc15", // Tailwind yellow-400
-    "#f87171", // Tailwind red-400
-    "#a3a3a3", // A neutral gray for unaccounted costs
-    "#8b5cf6", // Tailwind violet-500
-    "#ec4899", // Tailwind pink-500
-    "#22d3ee", // Tailwind cyan-400
-    "#e879f9", // Tailwind fuchsia-400
-  ];
 
   const totalCost = useMemo(
     () => chartData.reduce((sum, item) => sum + item.cost, 0),
