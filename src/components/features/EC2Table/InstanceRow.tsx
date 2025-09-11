@@ -1,10 +1,12 @@
-'use client";';
+"use client";
 
 import Sparkline from "@/components/ui/Sparkline";
 import { EC2Instance } from "@/types/ec2";
 import useSWR from "swr";
 import { formatUptime, getRecommendedAction } from "./utils";
 import RecommendedAction from "./RecommendedAction";
+import { STATUS_LABEL } from "@/constants/ec2Table";
+
 interface InstanceRowProps {
   instance: EC2Instance;
   index: number;
@@ -24,23 +26,16 @@ const ProgressBar = ({ value }: { value: number }) => (
     <div
       className="h-full rounded-full transition-all duration-300"
       style={{
-        width: `${Math.min(Math.max(value, 0), 100)}%`, // Clamp value between 0 and 100
+        width: `${Math.min(Math.max(value, 0), 100)}%`,
         background: `linear-gradient(to right, ${
-          value < 50 ? "#4CAF50" : value < 80 ? "#FFC107" : "#F44336"
+          value < 50 ? "#14b8a6" : value < 80 ? "#f59e0b" : "#ef4444"
         } 0%, ${
-          value < 50 ? "#66BB6A" : value < 80 ? "#FFCA28" : "#EF5350"
+          value < 50 ? "#2dd4bf" : value < 80 ? "#fbbf24" : "#f87171"
         } 100%)`,
       }}
     ></div>
   </div>
 );
-
-const getInsight = (cpu: number, ram: number, uptime: number) => {
-  if (cpu < 10 && uptime > 24) return "Idle candidate – safe to stop";
-  if (cpu < 30 && ram < 30) return "Batch-ready – good for lightweight jobs";
-  if (cpu > 70 || ram > 70) return "High load – consider scaling";
-  return "Healthy utilisation";
-};
 
 const InstanceRow: React.FC<InstanceRowProps> = ({
   instance,
@@ -62,7 +57,7 @@ const InstanceRow: React.FC<InstanceRowProps> = ({
     fetcher,
     { refreshInterval: 60000, dedupingInterval: 2000 }
   );
-
+  debugger;
   const cpu =
     cpuMetrics && cpuMetrics.length > 0
       ? cpuMetrics.sort(
@@ -99,72 +94,63 @@ const InstanceRow: React.FC<InstanceRowProps> = ({
     if (value === undefined || isNaN(value)) return "N/A";
     return `${value.toFixed(2)}%`;
   };
+
   return (
     <tr
-      className={`border-t border-gray-200 dark:border-gray-700 transition-colors duration-200 ${
+      className={`border-t border-gray-700 transition-all duration-200 ${
         index % 2 === 0
-          ? "bg-white dark:bg-gray-800"
-          : "bg-gray-50 dark:bg-gray-900"
-      } hover:bg-gray-100 dark:hover:bg-gray-700`}
+          ? "bg-gradient-to-r from-gray-800 to-gray-900"
+          : "bg-gradient-to-r from-gray-900 to-gray-950"
+      } hover:bg-teal-900/30`}
     >
-      <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
-        {instance.id}
-      </td>
-      <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
-        {instance.region}
-      </td>
-      <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
-        {instance.type}
-      </td>
+      <td className="px-4 py-3 text-gray-100">{instance.id}</td>
+      <td className="px-4 py-3 text-gray-100">{instance.region}</td>
+      <td className="px-4 py-3 text-gray-100">{instance.type}</td>
       <td className="px-4 py-3 align-middle">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 w-28">
             <ProgressBar value={cpu || 0} />
-            <span className="text-sm font-semibold text-gray-300">
+            <span className="text-sm font-medium text-gray-300">
               {formatPercentage(cpu || 0)}
             </span>
           </div>
-          {cpuMetrics && <Sparkline data={cpuMetrics} color="#4CAF50" />}
+          {cpuMetrics && <Sparkline data={cpuMetrics} color="#14b8a6" />}
         </div>
       </td>
-
       <td className="px-4 py-3 align-middle">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 w-28">
             <ProgressBar value={ram || 0} />
-            <span className="text-sm font-semibold text-gray-300">
+            <span className="text-sm font-medium text-gray-300">
               {formatPercentage(ram || 0)}
             </span>
           </div>
-          {ramMetrics && <Sparkline data={ramMetrics} color="#2196F3" />}
+          {ramMetrics && <Sparkline data={ramMetrics} color="#60a5fa" />}
         </div>
       </td>
-
       <td className="px-4 py-3 align-middle">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 w-28">
             <ProgressBar value={gpu || 0} />
-            <span className="text-sm font-semibold text-gray-300">
+            <span className="text-sm font-medium text-gray-300">
               {formatPercentage(gpu || 0)}
             </span>
           </div>
-          {gpuMetrics && <Sparkline data={gpuMetrics} color="#FF9800" />}
+          {gpuMetrics && <Sparkline data={gpuMetrics} color="#f59e0b" />}
         </div>
       </td>
-      <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
-        {formatUptime(uptimeHours)}
-      </td>
-      <td className="px-4 py-3 text-gray-900 dark:text-gray-100">
+      <td className="px-4 py-3 text-gray-100">{formatUptime(uptimeHours)}</td>
+      <td className="px-4 py-3 text-gray-100">
         {costPerHour !== undefined ? `$${costPerHour.toFixed(4)}` : "N/A"}
       </td>
       <td className="px-4 py-3">
         {isWaste(cpu, uptimeHours) ? (
-          <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full text-xs font-medium">
-            Waste
+          <span className="px-2 py-1 bg-red-900/50 text-red-400 rounded-full text-xs font-medium">
+            {STATUS_LABEL.WASTE}
           </span>
         ) : (
-          <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs font-medium">
-            Healthy
+          <span className="px-2 py-1 bg-teal-900/50 text-teal-400 rounded-full text-xs font-medium">
+            {STATUS_LABEL.HEALTHY}
           </span>
         )}
       </td>

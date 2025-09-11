@@ -2,8 +2,113 @@ export const detectSpike = (
   previousValue: number,
   currentValue: number
 ): boolean => {
-  const threshold = 0.2; // 20% increase considered a spike and this can be configured later
+  const threshold = 0.2;
   if (previousValue === 0) return false;
   const change = (currentValue - previousValue) / previousValue;
   return change > threshold;
 };
+
+export const getProjectedMonthlyRecommendation = (
+  previousProjectedMonthly: number,
+  projectedMonthly: number
+) => {
+  const diff =
+    previousProjectedMonthly === 0
+      ? projectedMonthly > 0
+        ? 100
+        : 0
+      : ((projectedMonthly - previousProjectedMonthly) /
+          previousProjectedMonthly) *
+        100;
+
+  if (diff > 20) {
+    return {
+      message: `Projected spend is ${diff.toFixed(
+        2
+      )}% higher than last month. Review workloads.`,
+    };
+  } else if (diff < -15) {
+    return {
+      message: `Projected spend is ${Math.abs(diff).toFixed(
+        0
+      )}% lower than last month. Excellent management!`,
+    };
+  }
+  return {
+    message: "Projected monthly spend is stable.",
+  };
+};
+
+export const getSpendRecommendation = (
+  previousTotalSpend: number,
+  totalSpend: number
+) => {
+  const diff =
+    previousTotalSpend === 0
+      ? totalSpend > 0
+        ? 100
+        : 0
+      : ((totalSpend - previousTotalSpend) / previousTotalSpend) * 100;
+
+  if (diff > 20) {
+    return {
+      message: `Spending is ${diff.toFixed(
+        2
+      )}% higher than last month. Consider scaling down unused instances or optimizing storage.`,
+    };
+  } else if (diff < -10) {
+    return {
+      message: `Spending is ${Math.abs(diff).toFixed(
+        2
+      )}% lower than last month. Great job!`,
+    };
+  }
+  return {
+    message: "Cloud spend is stable compared to last month.",
+  };
+};
+
+export const getDailyBurnRecommendation = (
+  previousDailyBurn: number,
+  dailyBurn: number
+) => {
+  const diff =
+    previousDailyBurn === 0
+      ? dailyBurn > 0
+        ? 100
+        : 0
+      : ((dailyBurn - previousDailyBurn) / previousDailyBurn) * 100;
+
+  if (diff > 30) {
+    return {
+      message: `Daily burn rate spiked by ${diff.toFixed(
+        2
+      )}%. Check running processes that could be terminated.`,
+    };
+  } else if (diff < -15) {
+    return {
+      message: `Daily burn decreased by ${Math.abs(diff).toFixed(
+        2
+      )}%. Cost-saving measures are working.`,
+    };
+  }
+  return {
+    message: "Daily burn is consistent with the past period.",
+  };
+};
+
+export type TrendSignal = "idle" | "bursty" | "high" | "rising" | "stable";
+
+export function analyzeTrend(values: number[]): TrendSignal {
+  if (!values || values.length < 3) return "stable";
+
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  const variance =
+    values.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / values.length;
+  const slope = values[values.length - 1] - values[0];
+
+  if (avg < 10 && variance < 5) return "idle";
+  if (variance > 50) return "bursty";
+  if (avg > 70) return "high";
+  return slope > 0 ? "rising" : "stable";
+}

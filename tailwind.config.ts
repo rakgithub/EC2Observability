@@ -147,5 +147,54 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    function ({ addUtilities }) {
+      addUtilities({
+        ".scrollbar": {
+          "-webkit-overflow-scrolling": "touch",
+          "scrollbar-width": "auto",
+        },
+        ".scrollbar-thin": {
+          "scrollbar-width": "thin",
+          "&::-webkit-scrollbar": {
+            width: "8px",
+            height: "8px",
+          },
+        },
+        ".scrollbar-track-gray-700": {
+          "&::-webkit-scrollbar-track": {
+            background: "#374151",
+            "border-radius": "4px",
+          },
+        },
+        ".scrollbar-thumb-teal-400": {
+          "&::-webkit-scrollbar-thumb": {
+            background: "#14b8a6",
+            "border-radius": "4px",
+            transition: "background-color 0.2s",
+          },
+        },
+        ".scrollbar-thumb-teal-300": {
+          "&::-webkit-scrollbar-thumb:hover": {
+            background: "#2dd4bf",
+          },
+        },
+        ".scrollbar-track-rounded": {
+          "&::-webkit-scrollbar-track": {
+            "border-radius": "4px",
+          },
+        },
+        ".scrollbar-thumb-rounded": {
+          "&::-webkit-scrollbar-thumb": {
+            "border-radius": "4px",
+          },
+        },
+        ".scrollbar-firefox": {
+          "scrollbar-color": "#14b8a6 #374151",
+          "scrollbar-width": "thin",
+        },
+      });
+    },
+  ],
 } satisfies Config;

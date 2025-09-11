@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "@/assets/styles/globals.css";
+import { ErrorProvider } from "@/context/ErrorProvider";
 
 export const metadata: Metadata = {
   title: "AWS Cost Monitor",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body>{children}</body>
+      <body>
+        <ErrorProvider>{children}</ErrorProvider>
+      </body>
     </html>
   );
 }

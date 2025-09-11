@@ -1,7 +1,9 @@
 import { GetMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 import { cwClient } from "../aws";
+import { USE_MOCK_DATA } from "@/config";
+import { getMockMetrics } from "@/mockData/mock";
 
-export async function getMetrics(instanceId: string) {
+export async function getMetrics(instanceId: string, metricName: string) {
   try {
     const command = new GetMetricDataCommand({
       MetricDataQueries: [
@@ -10,7 +12,7 @@ export async function getMetrics(instanceId: string) {
           MetricStat: {
             Metric: {
               Namespace: "AWS/EC2",
-              MetricName: "CPUUtilization",
+              MetricName: metricName,
               Dimensions: [{ Name: "InstanceId", Value: instanceId }],
             },
             Period: 300,
@@ -23,24 +25,11 @@ export async function getMetrics(instanceId: string) {
       StartTime: new Date(Date.now() - 5 * 60 * 1000),
       EndTime: new Date(),
     });
-    const response = await cwClient.send(command);
-    const metrics = response.MetricDataResults?.[0]?.Values || [];
-    if (metrics.length < 2) {
-      // fallback mock data
-      const now = new Date();
-      return Array.from({ length: 5 }).map((_, i) => ({
-        Timestamp: new Date(now.getTime() - i * 5 * 60 * 1000).toISOString(),
-        Average: Math.floor(Math.random() * 100), // random percentage
-        Unit: "Percent",
-        MetricName: [
-          "CPUUtilization",
-          "MemoryUtilization",
-          "DiskReadOps",
-          "NetworkIn",
-          "NetworkOut",
-        ][i % 5],
-      }));
+    let response = await cwClient.send(command);
+    if (USE_MOCK_DATA) {
+      response = getMockMetrics(metricName);
     }
+    const metrics = response.MetricDataResults?.[0]?.Values || [];
     return metrics.map((value, index) => ({
       Timestamp:
         response.MetricDataResults?.[0]?.Timestamps?.[index]?.toISOString() ||

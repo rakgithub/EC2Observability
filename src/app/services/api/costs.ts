@@ -1,56 +1,95 @@
 import { GetCostAndUsageCommand } from "@aws-sdk/client-cost-explorer";
 import { ceClient } from "../aws";
+import { mockCostData } from "@/mockData/mock";
 import { TimeRange } from "@/types/cost";
+import { USE_MOCK_DATA } from "@/config";
+
+type Trend = "up" | "down" | "neutral";
 
 function parseCost(amount?: string): number {
   return parseFloat(amount || "0") || 0;
 }
 
+function formatDate(date: Date): string {
+  return date.toISOString().split("T")[0];
+}
+
+function getTrend(current: number, previous: number): Trend {
+  if (current > previous) return "up";
+  if (current < previous) return "down";
+  return "neutral";
+}
+
+async function fetchCosts(params: {
+  start: Date;
+  end: Date;
+  granularity: "DAILY" | "MONTHLY" | "HOURLY";
+  groupBy?: { Type: "DIMENSION" | "TAG"; Key: string }[];
+}) {
+  const cmd = new GetCostAndUsageCommand({
+    TimePeriod: {
+      Start: formatDate(params.start),
+      End: formatDate(params.end),
+    },
+    Granularity: params.granularity,
+    Metrics: ["UnblendedCost"],
+    ...(params.groupBy ? { GroupBy: params.groupBy } : {}),
+  });
+
+  const res = await ceClient.send(cmd);
+  return res.ResultsByTime ?? [];
+}
+
 export async function getCosts(timeRange: TimeRange) {
   try {
     const now = new Date();
-    const past = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // last 7 days
     const daysInMonth = new Date(
       now.getFullYear(),
       now.getMonth() + 1,
       0
     ).getDate();
 
-    //  KPI numbers (last 7 days)
-    const kpiCmd = new GetCostAndUsageCommand({
-      TimePeriod: {
-        Start: past.toISOString().split("T")[0],
-        End: now.toISOString().split("T")[0],
-      },
-      Granularity: "DAILY",
-      Metrics: ["UnblendedCost"],
+    let start: Date;
+    let granularity: "HOURLY" | "DAILY";
+    if (timeRange === "24h") {
+      start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      granularity = "HOURLY";
+    } else if (timeRange === "7d") {
+      start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      granularity = "DAILY";
+    } else if (timeRange === "30d") {
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      granularity = "DAILY";
+    } else {
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      now.setDate(0);
+      granularity = "DAILY";
+    }
+
+    const past7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const past14d = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+
+    const kpiResults = await fetchCosts({
+      start: start,
+      end: now,
+      granularity: granularity,
     });
-
-    const kpiRes = await ceClient.send(kpiCmd);
-    const results = kpiRes.ResultsByTime ?? [];
-
-    const totalSpend = results.reduce(
+    const totalSpend = kpiResults.reduce(
       (sum, r) => sum + parseCost(r.Total?.UnblendedCost?.Amount),
       0
     );
-
-    const dailyBurn = results.length > 0 ? totalSpend / results.length : 0;
+    const dailyBurn = kpiResults.length ? totalSpend / kpiResults.length : 0;
     const projectedMonthly = dailyBurn * daysInMonth;
 
-    let dailyBurnTrend: "up" | "down" | "neutral" = "neutral";
-    if (results.length >= 2) {
-      const yesterday = parseCost(
-        results[results.length - 1].Total?.UnblendedCost?.Amount
-      );
-      const dayBefore = parseCost(
-        results[results.length - 2].Total?.UnblendedCost?.Amount
-      );
+    const dailyBurnTrend =
+      kpiResults.length >= 2
+        ? getTrend(
+            parseCost(kpiResults.at(-1)?.Total?.UnblendedCost?.Amount),
+            parseCost(kpiResults.at(-2)?.Total?.UnblendedCost?.Amount)
+          )
+        : "neutral";
 
-      if (yesterday > dayBefore) dailyBurnTrend = "up";
-      else if (yesterday < dayBefore) dailyBurnTrend = "down";
-    }
-
-    // Previous month to same day
+    // Previous month up to same day
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const sameDayLastMonth = new Date(
       now.getFullYear(),
@@ -58,161 +97,160 @@ export async function getCosts(timeRange: TimeRange) {
       now.getDate()
     );
 
-    const lastMonthCmd = new GetCostAndUsageCommand({
-      TimePeriod: {
-        Start: startOfLastMonth.toISOString().split("T")[0],
-        End: sameDayLastMonth.toISOString().split("T")[0],
-      },
-      Granularity: "DAILY",
-      Metrics: ["UnblendedCost"],
+    const lastMonthResults = await fetchCosts({
+      start: startOfLastMonth,
+      end: sameDayLastMonth,
+      granularity: "DAILY",
     });
-
-    const lastMonthRes = await ceClient.send(lastMonthCmd);
-    const lastMonthResults = lastMonthRes.ResultsByTime ?? [];
 
     const lastMonthSpend = lastMonthResults.reduce(
       (sum, r) => sum + parseCost(r.Total?.UnblendedCost?.Amount),
       0
     );
-    let totalSpendTrend: "up" | "down" | "neutral" = "neutral";
-    if (lastMonthSpend > 0) {
-      totalSpendTrend = totalSpend >= lastMonthSpend ? "up" : "down";
-    }
+    const totalSpendTrend =
+      lastMonthSpend > 0 ? getTrend(totalSpend, lastMonthSpend) : "neutral";
 
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0); // last day of previous month
-
-    const lastMonthFullCmd = new GetCostAndUsageCommand({
-      TimePeriod: {
-        Start: startOfLastMonth.toISOString().split("T")[0],
-        End: endOfLastMonth.toISOString().split("T")[0],
-      },
-      Granularity: "MONTHLY",
-      Metrics: ["UnblendedCost"],
+    // Full last month
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    const lastMonthFull = await fetchCosts({
+      start: startOfLastMonth,
+      end: endOfLastMonth,
+      granularity: "MONTHLY",
     });
 
-    const lastMonthFullRes = await ceClient.send(lastMonthFullCmd);
-    const lastMonthFullResults = lastMonthFullRes.ResultsByTime ?? [];
-    const lastMonthTotal = lastMonthFullResults.reduce(
+    const lastMonthTotal = lastMonthFull.reduce(
       (sum, r) => sum + parseCost(r.Total?.UnblendedCost?.Amount),
       0
     );
+    const projectedMonthlyTrend =
+      lastMonthTotal > 0
+        ? getTrend(projectedMonthly, lastMonthTotal)
+        : "neutral";
 
-    let projectedMonthlyTrend: "up" | "down" | "neutral" = "neutral";
-    if (lastMonthTotal > 0) {
-      projectedMonthlyTrend =
-        projectedMonthly >= lastMonthTotal ? "up" : "down";
-    }
+    // Grouped costs
+    // const [regionRes, typeRes, jobRes] = await Promise.all([
+    //   fetchCosts({
+    //     start: past7d,
+    //     end: now,
+    //     granularity: "MONTHLY",
+    //     groupBy: [{ Type: "DIMENSION", Key: "REGION" }],
+    //   }),
+    //   fetchCosts({
+    //     start: past7d,
+    //     end: now,
+    //     granularity: "MONTHLY",
+    //     groupBy: [{ Type: "DIMENSION", Key: "INSTANCE_TYPE" }],
+    //   }),
+    //   fetchCosts({
+    //     start,
+    //     end: now,
+    //     granularity: "MONTHLY",
+    //     groupBy: [{ Type: "TAG", Key: "job" }],
+    //   }),
+    // ]);
+    const [regionRes, typeRes, jobRes] = await Promise.all([
+      fetchCosts({
+        start: start, // Use the dynamic 'start' date
+        end: now,
+        granularity: granularity, // Use the dynamic 'granularity'
+        groupBy: [{ Type: "DIMENSION", Key: "REGION" }],
+      }),
+      fetchCosts({
+        start: start, // Use the dynamic 'start' date
+        end: now,
+        granularity: granularity, // Use the dynamic 'granularity'
+        groupBy: [{ Type: "DIMENSION", Key: "INSTANCE_TYPE" }],
+      }),
+      fetchCosts({
+        start: start, // Use the dynamic 'start' date
+        end: now,
+        granularity: granularity, // Use the dynamic 'granularity'
+        groupBy: [{ Type: "TAG", Key: "job" }],
+      }),
+    ]);
 
-    // Costs grouped by REGION
-    const regionCmd = new GetCostAndUsageCommand({
-      TimePeriod: {
-        Start: past.toISOString().split("T")[0],
-        End: now.toISOString().split("T")[0],
-      },
-      Granularity: "MONTHLY",
-      Metrics: ["UnblendedCost"],
-      GroupBy: [{ Type: "DIMENSION", Key: "REGION" }],
-    });
-
-    const regionRes = await ceClient.send(regionCmd);
     const byRegion =
-      regionRes.ResultsByTime?.[0]?.Groups?.map((g) => ({
+      regionRes[0]?.Groups?.map((g) => ({
         name: g.Keys?.[0] ?? "Unknown",
         cost: parseCost(g.Metrics?.UnblendedCost?.Amount),
       })) ?? [];
 
-    // Costs grouped by INSTANCE_TYPE
-    const typeCmd = new GetCostAndUsageCommand({
-      TimePeriod: {
-        Start: past.toISOString().split("T")[0],
-        End: now.toISOString().split("T")[0],
-      },
-      Granularity: "MONTHLY",
-      Metrics: ["UnblendedCost"],
-      GroupBy: [{ Type: "DIMENSION", Key: "INSTANCE_TYPE" }],
-    });
-
-    const typeRes = await ceClient.send(typeCmd);
     const byType =
-      typeRes.ResultsByTime?.[0]?.Groups?.map((g) => ({
+      typeRes[0]?.Groups?.map((g) => ({
         name: g.Keys?.[0] ?? "Unknown",
         cost: parseCost(g.Metrics?.UnblendedCost?.Amount),
       })) ?? [];
 
-    const pastPrevious = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000); // Last 14 days to compare
-    const previous = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // Last 7 days
+    const byJob =
+      jobRes[0]?.Groups?.map((g) => ({
+        name: g.Keys?.[0]?.replace("job$", "") ?? "Unlabeled Job",
+        cost: parseCost(g.Metrics?.UnblendedCost?.Amount),
+      })) ?? [];
 
-    // Fetch previous 7 days' costs
-    const previousCmd = new GetCostAndUsageCommand({
-      TimePeriod: {
-        Start: pastPrevious.toISOString().split("T")[0],
-        End: previous.toISOString().split("T")[0],
-      },
-      Granularity: "DAILY",
-      Metrics: ["UnblendedCost"],
+    // Previous 7 days
+    const prevResults = await fetchCosts({
+      start: past14d,
+      end: past7d,
+      granularity: "DAILY",
     });
-
-    const previousRes = await ceClient.send(previousCmd);
-    const previousResults = previousRes.ResultsByTime ?? [];
-
-    const previousTotalSpend = previousResults.reduce(
+    const previousTotalSpend = prevResults.reduce(
       (sum, r) => sum + parseCost(r.Total?.UnblendedCost?.Amount),
       0
     );
-
-    const previousDailyBurn =
-      previousResults.length > 0
-        ? previousTotalSpend / previousResults.length
-        : 0;
-
+    const previousDailyBurn = prevResults.length
+      ? previousTotalSpend / prevResults.length
+      : 0;
     const previousProjectedMonthly = previousDailyBurn * daysInMonth;
 
-    // Apply fallback if basically zero or no data
-    const isZero =
-      totalSpend < 0.01 &&
-      dailyBurn < 0.01 &&
-      projectedMonthly < 0.01 &&
-      byRegion.every((r) => r.cost < 0.01) &&
-      byType.every((t) => t.cost < 0.01);
+    // Build base daily history
+    const dailyHistory = kpiResults.map((r) => ({
+      Timestamp: r.TimePeriod?.Start ?? "",
+      Average: parseCost(r.Total?.UnblendedCost?.Amount),
+    }));
 
-    if (isZero) {
+    // Total Spend History
+    const totalSpendHistory = dailyHistory.map((h, i) => ({
+      Timestamp: h.Timestamp,
+      Average: dailyHistory
+        .slice(0, i + 1)
+        .reduce((sum, d) => sum + d.Average, 0),
+    }));
+
+    // Daily Burn History
+    const dailyBurnHistory = dailyHistory;
+
+    // Projected Monthly History
+    const projectedMonthlyHistory = dailyHistory.map((h, i) => {
+      const cumulative = dailyHistory
+        .slice(0, i + 1)
+        .reduce((sum, d) => sum + d.Average, 0);
+      const avg = cumulative / (i + 1);
       return {
-        totalSpend: 1240,
-        totalSpendTrend: "down",
-        dailyBurn: 52,
-        dailyBurnTrend: "down",
-        projectedMonthly: 1560,
-        byRegion: [
-          { name: "us-east-1", cost: 500 },
-          { name: "eu-west-1", cost: 300 },
-          { name: "ap-south-1", cost: 440 },
-        ],
-        byType: [
-          { name: "m5.large", cost: 400 },
-          { name: "t2.micro", cost: 150 },
-          { name: "c5.xlarge", cost: 690 },
-        ],
-        previousTotalSpend: 1100,
-        previousDailyBurn: 150,
-        previousProjectedMonthly: 850,
-        projectedMonthlyTrend: "up",
-        mock: true,
+        Timestamp: h.Timestamp,
+        Average: avg * daysInMonth,
       };
+    });
+    // USE MOCK DATA
+    if (USE_MOCK_DATA) {
+      return mockCostData();
     }
 
     return {
-      totalSpend: Number(totalSpend.toFixed(2)),
+      totalSpend: +totalSpend.toFixed(2),
       totalSpendTrend,
-      dailyBurn: Number(dailyBurn.toFixed(2)),
+      dailyBurn: +dailyBurn.toFixed(2),
       dailyBurnTrend,
-      projectedMonthly: Number(projectedMonthly.toFixed(2)),
+      projectedMonthly: +projectedMonthly.toFixed(2),
       projectedMonthlyTrend,
       byRegion,
       byType,
-      mock: false,
+      byJob,
       previousTotalSpend,
       previousDailyBurn,
       previousProjectedMonthly,
+      totalSpendHistory,
+      dailyBurnHistory,
+      projectedMonthlyHistory,
     };
   } catch (err) {
     console.error("Error fetching costs:", err);

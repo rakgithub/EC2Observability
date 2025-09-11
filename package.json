@@ -13,6 +13,7 @@
     "@aws-sdk/client-cost-explorer": "^3.882.0",
     "@aws-sdk/client-ec2": "^3.882.0",
     "@tanstack/react-table": "^8.21.3",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "postcss": "^8.5.6",
