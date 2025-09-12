@@ -159,6 +159,8 @@ export const buildMetrics = (data: CostsResponse) => {
       history: data?.totalSpendHistory ?? [],
       tooltip: LABELS.TOTAL_SPEND_TOOLTIP,
       isAnomaly: detectSpike(data?.totalSpendHistory ?? [], "totalSpend"),
+      anomalyMessage: "Overall AWS costs are much higher than usual.",
+      anomalyActionButtonText: "View Cost Breakdown",
       recommendation: getSpendRecommendation(previousTotalSpend, totalSpend),
       color: "#10b981",
     },
@@ -170,6 +172,8 @@ export const buildMetrics = (data: CostsResponse) => {
       history: data?.dailyBurnHistory ?? [],
       tooltip: LABELS.DAILY_BURN_TOOLTIP,
       isAnomaly: detectSpike(data?.dailyBurnHistory ?? [], "burn"),
+      anomalyMessage: "Spending more each day than your typical average.",
+      anomalyActionButtonText: "Check Active Jobs",
       recommendation: getDailyBurnRecommendation(previousDailyBurn, dailyBurn),
       color: "#3b82f6",
     },
@@ -180,7 +184,9 @@ export const buildMetrics = (data: CostsResponse) => {
       trend: projectedMonthlyTrend,
       history: data?.projectedMonthlyHistory ?? [],
       tooltip: LABELS.PROJECTED_MONTHLY_TOOLTIP,
-      isAnomaly: detectSpike(data?.projectedMonthlyHistory ?? [], "projected"),
+      isAnomaly: detectSpike(data?.projectedMonthlyHistory ?? [], "projected"), 
+      anomalyMessage: "This month's costs are trending well above than last month.",
+      anomalyActionButtonText: "Set Budget Alert",
       recommendation: getProjectedMonthlyRecommendation(
         previousProjectedMonthly,
         projectedMonthly

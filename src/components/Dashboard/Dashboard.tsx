@@ -1,7 +1,7 @@
 import { CheckCircle } from "lucide-react";
-import CloudCostOverview from "../features/CloudCost/CloudCostOverview";
-import EC2Table from "../features/EC2Table/EC2Table";
-import CostAttributionPanel from "../features/CostAttribution/CostAttributionPanel";
+import CloudCostOverview from "../features/cloudCost/CloudCostOverview";
+import EC2Table from "../features/eC2Table/EC2Table";
+import CostAttributionPanel from "../features/costAttribution/CostAttributionPanel";
 
 const Dashboard: React.FC = () => {
   return (

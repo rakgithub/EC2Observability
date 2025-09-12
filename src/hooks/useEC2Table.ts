@@ -8,7 +8,7 @@ import {
   SortingState,
 } from "@tanstack/react-table";
 import { EC2Instance } from "@/types/ec2";
-import { EC2TableColumns as columns } from "@/components/features/EC2Table/EC2TableColumns";
+import { EC2TableColumns as columns } from "@/components/features/eC2Table/EC2TableColumns";
 
 export function useEC2Table(data: EC2Instance[]) {
   const [sorting, setSorting] = useState<SortingState>([]);

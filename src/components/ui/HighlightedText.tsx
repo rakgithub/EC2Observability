@@ -8,7 +8,7 @@ const getValueClass = (value: number): string => {
 
 const HighlightedText: React.FC<{ message: string }> = ({ message }) => {
   return (
-    <span className="text-sm text-gray-300 leading-relaxed">
+    <span className="text-xs text-gray-300 leading-relaxed">
       {message.split(/(-?\d+\.?\d*%)/g).map((part, i) =>
         part.endsWith("%") ? (
           <span key={i} className={getValueClass(parseFloat(part))}>

@@ -18,11 +18,8 @@ export function mockCostData(granularity?: "DAILY" | "HOURLY") {
     } else {
       dailySpend = 100 + Math.random() * 20;
     }
-
-    // Spike on the second to last day (i=1). This creates a spike
-    // in daily burn and a spike in the rate of change for total spend.
     if (i === 1) {
-      dailySpend = 300 + Math.random() * 10;
+      dailySpend = 50 + Math.random() * 10;
     }
 
     dailyData.push({

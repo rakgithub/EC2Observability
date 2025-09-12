@@ -8,7 +8,9 @@ import {
   Info,
   Lightbulb,
   AlertTriangle,
+  ArrowRight,
 } from "lucide-react";
+import { useCallback } from "react";
 
 type Trend = "up" | "down" | "neutral";
 
@@ -21,6 +23,8 @@ interface KPICardProps {
   recommendation?: { message: string };
   history?: { Timestamp: string; Average: number }[];
   color?: string;
+  anomalyMessage?: string;
+  anomalyActionButtonText?: string;
 }
 
 const trendConfig = {
@@ -37,7 +41,16 @@ const KPICard: React.FC<KPICardProps> = ({
   tooltipContent,
   recommendation,
   history,
+  anomalyMessage,
+  anomalyActionButtonText
 }) => {
+
+  const handleAnomalyAction = useCallback(() => {
+  // Implement the action to be taken when the anomaly button is clicked
+  // For example, navigate to a detailed cost breakdown page or open a modal
+  console.log("Anomaly action triggered");
+}, []);
+
   const { Icon: TrendIcon, color: trendColor } = trendConfig[trend];
   return (
     <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl shadow-md p-5 transition-all duration-300 hover:scale-105 hover:shadow-teal-500/50">
@@ -78,13 +91,22 @@ const KPICard: React.FC<KPICardProps> = ({
       )}
       {isAnomaly && (
         <div
-          className="mt-4 flex items-start gap-2 bg-red-900/50 rounded-lg p-3"
-          aria-label="Spending anomaly detected"
+          className="mt-4 flex items-start justify-between gap-2 bg-red-900/50 rounded-lg p-3"
+          aria-label="Anomaly detected"
         >
-          <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-400 leading-relaxed">
-            Anomaly detected: Spending has increased significantly.
-          </p>
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-red-400 leading-relaxed">
+              {anomalyMessage}
+            </p>
+          </div>
+          <button
+            onClick={handleAnomalyAction}
+            className="inline-flex items-center gap-1 text-xs font-medium text-red-100 bg-gradient-to-r from-red-800/60 to-red-700/60 hover:from-red-700/70 hover:to-red-600/70 px-2 py-1 rounded-md transition-all duration-200 ease-in-out hover:shadow-sm hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+          >
+           {anomalyActionButtonText || "Investigate"}
+            <ArrowRight className="w-3 h-3 transition-transform duration-200 group-hover:translate-x-0.5" />
+          </button>
         </div>
       )}
     </div>

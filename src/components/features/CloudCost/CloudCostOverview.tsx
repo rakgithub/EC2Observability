@@ -3,13 +3,13 @@
 import KPICard from "./KPICard";
 import { useCosts } from "@/hooks/useCosts";
 import { TimeRange } from "@/types/cost";
-import { buildMetrics } from "./utils";
 import { useMemo, useState } from "react";
 import { useError } from "@/context/ErrorProvider";
 import Skeleton from "@/components/ui/Skeleton";
 import { ERROR_MESSAGES, LABELS } from "@/constants/cloudCost";
 import ErrorMessage from "@/components/ui/ErrorMessage";
 import CloudCostHeader from "./CloudCostHeader";
+import { buildMetrics } from "./utils";
 
 const CloudCostOverview: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>("7d");
@@ -62,6 +62,8 @@ const CloudCostOverview: React.FC = () => {
             recommendation={m.recommendation}
             color={m.color}
             history={m.history}
+            anomalyMessage={m.anomalyMessage}
+            anomalyActionButtonText={m.anomalyActionButtonText}
           />
         ))}
       </div>

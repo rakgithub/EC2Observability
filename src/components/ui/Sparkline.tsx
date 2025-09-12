@@ -12,7 +12,7 @@ import {
 import { TooltipPayload } from "recharts/types/state/tooltipSlice";
 import Tooltip from "./Tooltip";
 import { Info } from "lucide-react";
-import { COLORS } from "../features/CloudCost/utils";
+import { COLORS } from "../features/cloudCost/utils";
 
 interface SparklineProps {
   data: { Timestamp: string; Average: number }[];
