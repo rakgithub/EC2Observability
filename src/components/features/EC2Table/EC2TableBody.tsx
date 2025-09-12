@@ -4,15 +4,10 @@ import { EC2Instance } from "@/types/ec2";
 
 interface EC2TableBodyProps {
   table: Table<EC2Instance>;
-  isWaste: (
-    cpu: number | undefined,
-    uptimeHours: number | undefined
-  ) => boolean;
 }
 
 export const EC2TableBody: React.FC<EC2TableBodyProps> = ({
   table,
-  isWaste,
 }) => {
   const preprocessedInstances = table
     .getRowModel()
@@ -40,7 +35,6 @@ export const EC2TableBody: React.FC<EC2TableBodyProps> = ({
           key={row.original.id}
           instance={row.original}
           index={row.index}
-          isWaste={isWaste}
         />
       ))}
     </tbody>

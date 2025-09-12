@@ -1,3 +1,4 @@
+
 import { GetCostAndUsageCommand } from "@aws-sdk/client-cost-explorer";
 import { ceClient } from "../aws";
 import { mockCostData } from "@/mockData/mock";
@@ -44,6 +45,50 @@ async function fetchCosts(params: {
   return res.ResultsByTime ?? [];
 }
 
+interface UnblendedCost {
+  Amount?: string;
+  Unit?: string;
+}
+
+interface Metric {
+  UnblendedCost?: UnblendedCost;
+}
+
+interface Group {
+  Keys?: string[];
+  Metrics?: Metric;
+}
+
+interface TimePeriodResult {
+  TimePeriod?: { Start?: string; End?: string };
+  Total?: Metric;
+  Groups?: Group[];
+}
+
+const aggregateGroupedData = (results: TimePeriodResult[]) => {
+  const aggregatedMap = new Map<string, number>();
+
+  results.forEach((timePeriodResult) => {
+    timePeriodResult.Groups?.forEach((group) => {
+      const key = group.Keys?.[0] ?? "Unknown";
+      const cost = parseCost(group.Metrics?.UnblendedCost?.Amount);
+      aggregatedMap.set(key, (aggregatedMap.get(key) || 0) + cost);
+    });
+  });
+
+  return Array.from(aggregatedMap.entries()).map(([name, cost]) => ({
+    name,
+    cost,
+  }));
+};
+
+function getPreviousDates(start: Date, end: Date) {
+  const diffInMs = end.getTime() - start.getTime();
+  const prevEnd = new Date(start.getTime());
+  const prevStart = new Date(prevEnd.getTime() - diffInMs);
+  return { start: prevStart, end: prevEnd };
+}
+
 export async function getCosts(timeRange: TimeRange) {
   try {
     const now = new Date();
@@ -69,9 +114,6 @@ export async function getCosts(timeRange: TimeRange) {
       now.setDate(0);
       granularity = "DAILY";
     }
-
-    const past7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const past14d = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
     const kpiResults = await fetchCosts({
       start: start,
@@ -132,27 +174,6 @@ export async function getCosts(timeRange: TimeRange) {
         ? getTrend(projectedMonthly, lastMonthTotal)
         : "neutral";
 
-    // Grouped costs
-    // const [regionRes, typeRes, jobRes] = await Promise.all([
-    //   fetchCosts({
-    //     start: past7d,
-    //     end: now,
-    //     granularity: "MONTHLY",
-    //     groupBy: [{ Type: "DIMENSION", Key: "REGION" }],
-    //   }),
-    //   fetchCosts({
-    //     start: past7d,
-    //     end: now,
-    //     granularity: "MONTHLY",
-    //     groupBy: [{ Type: "DIMENSION", Key: "INSTANCE_TYPE" }],
-    //   }),
-    //   fetchCosts({
-    //     start,
-    //     end: now,
-    //     granularity: "MONTHLY",
-    //     groupBy: [{ Type: "TAG", Key: "job" }],
-    //   }),
-    // ]);
     const [regionRes, typeRes, jobRes] = await Promise.all([
       fetchCosts({
         start: start,
@@ -174,11 +195,10 @@ export async function getCosts(timeRange: TimeRange) {
       }),
     ]);
 
-    const byRegionData =
-      regionRes[0]?.Groups?.map((g) => ({
-        name: g.Keys?.[0] ?? "Unknown",
-        cost: parseCost(g.Metrics?.UnblendedCost?.Amount),
-      })) ?? [];
+    const byRegionData = aggregateGroupedData(regionRes);
+    const byType = aggregateGroupedData(typeRes);
+    const byJob = aggregateGroupedData(jobRes);
+
 
     const regionAttributedCost = byRegionData.reduce(
       (sum, item) => sum + item.cost,
@@ -194,23 +214,12 @@ export async function getCosts(timeRange: TimeRange) {
           ]
         : byRegionData;
 
-    const byType =
-      typeRes[0]?.Groups?.map((g) => ({
-        name: g.Keys?.[0] ?? "Unknown",
-        cost: parseCost(g.Metrics?.UnblendedCost?.Amount),
-      })) ?? [];
 
-    const byJob =
-      jobRes[0]?.Groups?.map((g) => ({
-        name: g.Keys?.[0]?.replace("job$", "") ?? "Unlabeled Job",
-        cost: parseCost(g.Metrics?.UnblendedCost?.Amount),
-      })) ?? [];
-
-    // Previous 7 days
+    const previousDates = getPreviousDates(start, now);
     const prevResults = await fetchCosts({
-      start: past14d,
-      end: past7d,
-      granularity: "DAILY",
+      start: previousDates.start,
+      end: previousDates.end,
+      granularity: granularity,
     });
     const previousTotalSpend = prevResults.reduce(
       (sum, r) => sum + parseCost(r.Total?.UnblendedCost?.Amount),

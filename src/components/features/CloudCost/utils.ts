@@ -1,13 +1,33 @@
 import { LABELS } from "@/constants/cloudCost";
 import { CostsResponse } from "@/types/cost";
 
+export type MetricType = "burn" | "totalSpend" | "projected";
+
 export const detectSpike = (
-  previousValue: number,
-  currentValue: number
+  history: { Timestamp: string; Average: number }[],
+  type: MetricType,
+  threshold = 0.2
 ): boolean => {
-  const threshold = 0.2;
-  if (previousValue === 0) return false;
-  const change = (currentValue - previousValue) / previousValue;
+  if (history.length < 2) return false;
+
+  if (type === "totalSpend") {
+    if (history.length < 3) return false;
+
+    const prevDelta = history.at(-2)!.Average - history.at(-3)!.Average;
+    const currDelta = history.at(-1)!.Average - history.at(-2)!.Average;
+
+    if (prevDelta <= 0) return false;
+
+    const change = (currDelta - prevDelta) / prevDelta;
+    return change > threshold;
+  }
+  // burn or projected
+  const prev = history.at(-2)!.Average;
+  const curr = history.at(-1)!.Average;
+
+  if (prev <= 0) return false;
+
+  const change = (curr - prev) / prev;
   return change > threshold;
 };
 
@@ -70,6 +90,7 @@ export const getSpendRecommendation = (
     message: "Cloud spend is stable compared to last month.",
   };
 };
+
 
 export const getDailyBurnRecommendation = (
   previousDailyBurn: number,
@@ -137,7 +158,7 @@ export const buildMetrics = (data: CostsResponse) => {
       trend: totalSpendTrend,
       history: data?.totalSpendHistory ?? [],
       tooltip: LABELS.TOTAL_SPEND_TOOLTIP,
-      isAnomaly: detectSpike(previousTotalSpend, totalSpend),
+      isAnomaly: detectSpike(data?.totalSpendHistory ?? [], "totalSpend"),
       recommendation: getSpendRecommendation(previousTotalSpend, totalSpend),
       color: "#10b981",
     },
@@ -148,7 +169,7 @@ export const buildMetrics = (data: CostsResponse) => {
       trend: dailyBurnTrend,
       history: data?.dailyBurnHistory ?? [],
       tooltip: LABELS.DAILY_BURN_TOOLTIP,
-      isAnomaly: detectSpike(previousDailyBurn, dailyBurn),
+      isAnomaly: detectSpike(data?.dailyBurnHistory ?? [], "burn"),
       recommendation: getDailyBurnRecommendation(previousDailyBurn, dailyBurn),
       color: "#3b82f6",
     },
@@ -159,7 +180,7 @@ export const buildMetrics = (data: CostsResponse) => {
       trend: projectedMonthlyTrend,
       history: data?.projectedMonthlyHistory ?? [],
       tooltip: LABELS.PROJECTED_MONTHLY_TOOLTIP,
-      isAnomaly: detectSpike(previousProjectedMonthly, projectedMonthly),
+      isAnomaly: detectSpike(data?.projectedMonthlyHistory ?? [], "projected"),
       recommendation: getProjectedMonthlyRecommendation(
         previousProjectedMonthly,
         projectedMonthly

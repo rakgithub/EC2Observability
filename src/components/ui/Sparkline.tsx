@@ -43,23 +43,31 @@ const ChartTooltip: React.FC<MyTooltipProps> = ({ payload }) => {
     </div>
   );
 };
-function classifyLoad(values: number[]): { key: string,label: string; color: string } {
+
+
+function classifyLoad(values: number[]): { key: string, label: string; color: string } {
   // WHEN NOT ENOUGH DATA
   if (values.length < 3) {
-    return { key: "STABLE", label: CLASSIFIED_LOAD.COLLECTING_DATA, color: "text-gray-400" };
+    return { key: "STABLE", label: CLASSIFIED_LOAD.COLLECTING_DATA, color: "text-green-400" };
   }
 
   const avg = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance =
-    values.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / values.length;
+  const stdDev = Math.sqrt(values.reduce((a, b) => a + Math.pow(b - avg, 2), 0) / values.length);
   const slope = values[values.length - 1] - values[0];
 
-  if (avg < 10 && variance < 5)
+  // Check for idle state
+  if (avg < 5 && stdDev < 2)
     return { key: "IDLE", label: CLASSIFIED_LOAD.IDLE, color: "text-gray-400" };
-  if (variance > 50)
+
+  // Check for bursty behavior
+  if (stdDev > avg * 0.5) 
     return { key: "BUSTY", label: CLASSIFIED_LOAD.BUSTY, color: "text-yellow-400" };
-  if (avg > 70)
-    return { key:"HIGH",label: CLASSIFIED_LOAD.HIGH, color: "text-orange-400" };
+
+  // Check for high, 
+  if (avg > 70) 
+    return { key: "HIGH", label: CLASSIFIED_LOAD.HIGH, color: "text-orange-400" };
+
+  // Default to stable,
   return {
     key: "STABLE",
     label: slope > 0 ? CLASSIFIED_LOAD.RISING : CLASSIFIED_LOAD.STABLE,

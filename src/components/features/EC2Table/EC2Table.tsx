@@ -17,20 +17,6 @@ const EC2Table: React.FC = () => {
   const table = useEC2Table(instances);
   const { showError } = useError();
 
-const isWaste = (
-  cpu: number | undefined,
-  ram: number | undefined,
-  uptimeHours: number | undefined,
-  diskIO: number | undefined
-): boolean => {
-  if (cpu === undefined || uptimeHours === undefined) return false;
-
-  const isLowCpu = cpu < 15;
-  const isHighRamUsage = ram && ram > 80; // threshold for high RAM usage
-  const isLowDiskIO = diskIO && diskIO < 5; // threshold for low disk
-
-  return isLowCpu && uptimeHours > 24 && !isHighRamUsage && !isLowDiskIO;
-};
   const { idleCount, busyCount, healthyCount } = useMemo(() => {
     const idle = instances.filter((i) => i.cpu && i.cpu < 15).length;
     const busy = instances.filter((i) => i.cpu && i.cpu > 70).length;
@@ -81,7 +67,7 @@ const isWaste = (
             numericColumnIds={numericColumnIds}
             rangeOptions={rangeOptions}
           />
-          <EC2TableBody table={table} isWaste={isWaste} />
+          <EC2TableBody table={table} />
         </table>
       </div>
     </div>

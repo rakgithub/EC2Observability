@@ -1,68 +1,32 @@
-"use client";
-
-import Sparkline from "@/components/ui/Sparkline";
 import { EC2Instance, MetricDatapoint } from "@/types/ec2";
-import useSWR from "swr";
-import { formatUptime } from "./utils";
+import { formatUptime, isWaste } from "./utils";
 import RecommendedAction from "./RecommendedAction";
 import { LABELS } from "@/constants/ec2Table";
-import { ProgressBar } from "@/components/ui/ProgressBar";
+import MetricCell from "./MetricCell";
+import { useInstanceMetrics } from "@/hooks/useInstanceMetrics";
 
 interface InstanceRowProps {
   instance: EC2Instance;
   index: number;
-  isWaste: (
-    cpu: number | undefined,
-    uptimeHours: number | undefined
-  ) => boolean;
 }
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const InstanceRow: React.FC<InstanceRowProps> = ({
   instance,
   index,
-  isWaste,
 }) => {
-  const { data: cpuMetrics } = useSWR<MetricDatapoint[]>(
-    `/api/metrics?id=${instance.id}&metric=CPUUtilization`,
-    fetcher,
-    { refreshInterval: 60000, dedupingInterval: 2000 }
-  );
-  const { data: ramMetrics } = useSWR<MetricDatapoint[]>(
-    `/api/metrics?id=${instance.id}&metric=MemoryUtilization`,
-    fetcher,
-    { refreshInterval: 60000, dedupingInterval: 2000 }
-  );
-  const { data: gpuMetrics } = useSWR<MetricDatapoint[]>(
-    `/api/metrics?id=${instance.id}&metric=GPUUtilization`,
-    fetcher,
-    { refreshInterval: 60000, dedupingInterval: 2000 }
-  );
+  const { cpuMetrics, ramMetrics, gpuMetrics, diskMetrics } = useInstanceMetrics(instance.id);
 
-  const cpu =
-    cpuMetrics && cpuMetrics.length > 0
-      ? cpuMetrics.sort(
-          (a, b) =>
-            new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
-        )[0].Average
-      : instance.cpu;
+  const getLatestMetric = (metrics?: MetricDatapoint[]): number | undefined => {
+    if (!metrics || metrics.length === 0) return undefined;
+    return metrics.sort(
+      (a, b) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
+    )[0].Average;
+  };
 
-  const ram =
-    ramMetrics && ramMetrics.length > 0
-      ? ramMetrics.sort(
-          (a, b) =>
-            new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
-        )[0].Average
-      : instance.ram;
-
-  const gpu =
-    gpuMetrics && gpuMetrics.length > 0
-      ? gpuMetrics.sort(
-          (a, b) =>
-            new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
-        )[0].Average
-      : instance.gpu;
+  const cpu = getLatestMetric(cpuMetrics);
+  const ram = getLatestMetric(ramMetrics);
+  const gpu = getLatestMetric(gpuMetrics);
+  const disk = getLatestMetric(diskMetrics);
 
   const uptimeHours = instance.launchTime
     ? (new Date().getTime() - new Date(instance.launchTime).getTime()) /
@@ -72,10 +36,6 @@ const InstanceRow: React.FC<InstanceRowProps> = ({
   const costPerHour =
     instance.type === "t2.micro" ? 0.0116 : instance.costPerHour;
 
-  const formatPercentage = (value: number) => {
-    if (value === undefined || isNaN(value)) return LABELS.NA;
-    return `${value.toFixed(2)}%`;
-  };
   return (
     <tr
       className={`border-t border-gray-700 transition-all duration-200 ${
@@ -87,45 +47,17 @@ const InstanceRow: React.FC<InstanceRowProps> = ({
       <td className="px-4 py-3 text-gray-100">{instance.id}</td>
       <td className="px-4 py-3 text-gray-100">{instance.region}</td>
       <td className="px-4 py-3 text-gray-100">{instance.type}</td>
-      <td className="px-4 py-3 align-middle">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 w-28">
-            <ProgressBar value={cpu || 0} />
-            <span className="text-sm font-medium text-gray-300">
-              {formatPercentage(cpu || 0)}
-            </span>
-          </div>
-          {cpuMetrics && <Sparkline data={cpuMetrics} />}
-        </div>
-      </td>
-      <td className="px-4 py-3 align-middle">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 w-28">
-            <ProgressBar value={ram || 0} />
-            <span className="text-sm font-medium text-gray-300">
-              {formatPercentage(ram || 0)}
-            </span>
-          </div>
-          {ramMetrics && <Sparkline data={ramMetrics} />}
-        </div>
-      </td>
-      <td className="px-4 py-3 align-middle">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 w-28">
-            <ProgressBar value={gpu || 0} />
-            <span className="text-sm font-medium text-gray-300">
-              {formatPercentage(gpu || 0)}
-            </span>
-          </div>
-          {gpuMetrics && <Sparkline data={gpuMetrics} />}
-        </div>
-      </td>
+      
+      <MetricCell value={cpu} metricsData={cpuMetrics} />
+      <MetricCell value={ram} metricsData={ramMetrics} />
+      <MetricCell value={gpu} metricsData={gpuMetrics} />
+
       <td className="px-4 py-3 text-gray-100">{formatUptime(uptimeHours)}</td>
       <td className="px-4 py-3 text-gray-100">
         {costPerHour !== undefined ? `$${costPerHour.toFixed(4)}` : LABELS.NA}
       </td>
       <td className="px-4 py-3">
-        {isWaste(cpu, uptimeHours) ? (
+        {isWaste(cpu, ram, uptimeHours, disk) ? (
           <span className="px-2 py-1 bg-red-900/50 text-red-400 rounded-full text-xs font-medium">
             {LABELS.STATUS_WASTE}
           </span>

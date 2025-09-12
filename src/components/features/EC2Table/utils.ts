@@ -11,16 +11,20 @@ export const getActionLabel = (cpu: number, gpu: number, uptime: number) => {
   if (cpu > 80) return { label: "Upgrade Instance", tooltip: "CPU usage is high, upgrading your instance will improve performance." };
   return { label: "All Good", tooltip: "Instance running optimally. No action needed." };
 };
+
 export const isWaste = (
   cpu: number | undefined,
-  uptimeHours: number | undefined
+  ram: number | undefined,
+  uptimeHours: number | undefined,
+  diskIO: number | undefined
 ): boolean => {
-  return (
-    cpu !== undefined &&
-    uptimeHours !== undefined &&
-    cpu < 15 &&
-    uptimeHours > 24
-  );
+  if (cpu === undefined || uptimeHours === undefined) return false;
+
+  const isLowCpu = cpu < 15;
+  const isHighRamUsage = ram && ram > 80; // threshold for high RAM usage
+  const isLowDiskIO = diskIO && diskIO < 5; // threshold for low disk
+
+  return isLowCpu && uptimeHours > 24 && !isHighRamUsage && !isLowDiskIO;
 };
 
  interface RangeOption {

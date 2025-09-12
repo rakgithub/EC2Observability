@@ -8,7 +8,7 @@ interface RecommendedActionProps {
   cpu: number;
   gpu: number;
   uptime: number;
-  instanceId: string;
+  instanceId?: string;
   className?: string;
 }
 
@@ -16,7 +16,6 @@ const RecommendedAction: React.FC<RecommendedActionProps> = ({
   cpu,
   gpu,
   uptime,
-  instanceId,
   className,
 }) => {
   const [open, setOpen] = useState(false);
@@ -26,7 +25,6 @@ const RecommendedAction: React.FC<RecommendedActionProps> = ({
 
   const handleAction = (action: string) => {
     setOpen(false);
-    console.log(`Action: ${action} on instance ${instanceId}`);
     // TODO: connect to API to perform the action (e.g., stop or resize)
   };
 
