@@ -68,12 +68,13 @@ to access mock data -> config.js -> USE_MOCK_DATA = true
 
 To use real data from your AWS account, follow these steps:
 
-1.  Create an `.env.local` file in the project root.
-2.  Set your AWS credentials and region.
+1.  Create an `.env.example` file in the project root.
+2.  Copy it and rename it to .env.local
+3.  Set your AWS credentials and region.
     ```env
     AWS_ACCESS_KEY_ID=your_access_key
     AWS_SECRET_ACCESS_KEY=your_secret_key
     AWS_REGION=your_aws_region
     ```
-3.  Ensure the IAM role has read-only access to **EC2, CloudWatch, and Cost Explorer**.
-4.  Restart the development server (`npm run dev`).
+4.  Ensure the IAM role has read-only access to **EC2, CloudWatch, and Cost Explorer**.
+5.  Restart the development server (`npm run dev`).
